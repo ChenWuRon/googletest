@@ -17,7 +17,10 @@ set(TEST_SOURCES
     state/test_runtime_state_machine.cpp
     state/test_runtime_repository.cpp
     driver/test_cgroup_driver.cpp
-    discovery/test_process_discovery.cpp
+    discovery/test_procfs_discovery.cpp
+    discovery/test_discovery_rules.cpp
+    discovery/test_discovery_cache.cpp
+    discovery/test_discovery_service.cpp
     attach/test_attach_engine.cpp
     error/test_error.cpp
     log/test_logger.cpp

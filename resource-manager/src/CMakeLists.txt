@@ -18,7 +18,10 @@ set(SOURCES
     driver/cgroup_v2_driver.cpp
     driver/cgroup_v1_driver.cpp
     driver/mock_cgroup_driver.cpp
-    discovery/process_discovery.cpp
+    discovery/procfs_discovery.cpp
+    discovery/discovery_rules.cpp
+    discovery/discovery_cache.cpp
+    discovery/discovery_service.cpp
     attach/attach_engine.cpp
     monitor/monitor.cpp
     log/logger.cpp

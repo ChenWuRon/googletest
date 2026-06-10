@@ -34,6 +34,14 @@ std::unique_ptr<ConfigNode> ConfigNode::removeChild(const std::string& name) {
     return child;
 }
 
+void ConfigNode::setMatchRule(const MatchRule& rule) {
+    matchRule_ = rule;
+}
+
+std::optional<MatchRule> ConfigNode::getMatchRule() const {
+    return matchRule_;
+}
+
 ConfigNode* ConfigNode::findChild(const std::string& name) {
     auto it = children_.find(name);
     return it != children_.end() ? it->second.get() : nullptr;

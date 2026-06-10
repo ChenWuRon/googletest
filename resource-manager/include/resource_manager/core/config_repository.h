@@ -2,9 +2,11 @@
 
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include "resource_manager/core/config_domain.h"
 #include "resource_manager/core/validator.h"
+#include "resource_manager/state/runtime_state.h"
 
 namespace resource_manager {
 
@@ -27,13 +29,16 @@ public:
 
     const ConfigDomain& getRoot() const;
 
+    const ConfigState& getConfigState() const;
+
     const std::vector<RepositoryError>& errors() const;
 
 private:
     ConfigDomain domain_;
+    ConfigState configState_;
     std::vector<RepositoryError> errors_;
 
-    bool apply_source(const std::string& source);
+    bool apply_source(const std::string& source, const std::string& sourceName);
 
     void clear_errors();
     void add_error(std::size_t line, std::size_t column,

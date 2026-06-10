@@ -61,6 +61,23 @@ bool RuntimeStateManager::updateProcessPid(const std::string& name, int newPid) 
     return true;
 }
 
+bool RuntimeStateManager::setProcessAttachStatus(const std::string& name, AttachStatus status) {
+    std::unique_lock lock(mutex_);
+
+    auto nameIt = nameToPid_.find(name);
+    if (nameIt == nameToPid_.end()) {
+        return false;
+    }
+
+    auto stateIt = byPid_.find(nameIt->second);
+    if (stateIt == byPid_.end()) {
+        return false;
+    }
+
+    stateIt->second.processState().attachStatus = status;
+    return true;
+}
+
 bool RuntimeStateManager::setProcessRecoveryStatus(const std::string& name, RecoveryState status) {
     std::unique_lock lock(mutex_);
 
@@ -147,7 +164,8 @@ bool RuntimeStateManager::markProcessLost(const std::string& name, int pid) {
     }
 
     stateIt->second.processState().discoveryStatus = DiscoveryStatus::Missing;
-    stateIt->second.processState().recoveryStatus = RecoveryState::None;
+    stateIt->second.processState().attachStatus = AttachStatus::Pending;
+    stateIt->second.processState().recoveryStatus = RecoveryState::Detecting;
     return true;
 }
 

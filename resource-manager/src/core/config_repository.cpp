@@ -5,6 +5,8 @@
 #include "resource_manager/core/parser.h"
 #include "resource_manager/core/validator.h"
 
+#include <functional>
+
 namespace resource_manager {
 
 bool ConfigRepository::load(const std::string& filepath) {
@@ -14,18 +16,18 @@ bool ConfigRepository::load(const std::string& filepath) {
         add_error(0, 0, "", "failed to open file: " + filepath);
         return false;
     }
-    return apply_source(content.value());
+    return apply_source(content.value(), filepath);
 }
 
 bool ConfigRepository::loadFromString(const std::string& content) {
-    return apply_source(content);
+    return apply_source(content, "memory");
 }
 
-bool ConfigRepository::apply_source(const std::string& source) {
+bool ConfigRepository::apply_source(const std::string& content, const std::string& sourceName) {
     clear_errors();
 
     // ── Lex ─────────────────────────────────────────────────────────────
-    Lexer lexer(source);
+    Lexer lexer(content);
     std::vector<Token> tokens = lexer.tokenize();
 
     for (const auto& tok : tokens) {
@@ -55,16 +57,26 @@ bool ConfigRepository::apply_source(const std::string& source) {
     if (!errors_.empty()) return false;
 
     domain_ = std::move(parse_result.domain);
+    configState_.source = sourceName;
+    configState_.loaded_at = std::chrono::system_clock::now();
+    configState_.version = std::hash<std::string>{}(content);
     return true;
 }
 
 void ConfigRepository::replace(ConfigDomain domain) {
     clear_errors();
     domain_ = std::move(domain);
+    configState_.source = "replaced";
+    configState_.loaded_at = std::chrono::system_clock::now();
+    configState_.version = 0;
 }
 
 const ConfigDomain& ConfigRepository::getRoot() const {
     return domain_;
+}
+
+const ConfigState& ConfigRepository::getConfigState() const {
+    return configState_;
 }
 
 const std::vector<RepositoryError>& ConfigRepository::errors() const {

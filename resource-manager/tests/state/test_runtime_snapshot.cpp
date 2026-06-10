@@ -17,7 +17,7 @@ TEST(RuntimeSnapshotTest, SnapshotConsistency) {
 
     EXPECT_EQ(snapshot.pid(), 1234);
     EXPECT_EQ(snapshot.processName(), "nginx");
-    EXPECT_TRUE(snapshot.attached());
+    EXPECT_EQ(snapshot.attachStatus(), AttachStatus::Attached);
     EXPECT_EQ(snapshot.threads().size(), 2u);
 }
 
@@ -52,7 +52,8 @@ TEST(RuntimeSnapshotTest, SnapshotSerialization) {
     EXPECT_NE(serialized.find("RuntimeSnapshot"), std::string::npos);
     EXPECT_NE(serialized.find("pid=1234"), std::string::npos);
     EXPECT_NE(serialized.find("processName=nginx"), std::string::npos);
-    EXPECT_NE(serialized.find("attached=true"), std::string::npos);
+    EXPECT_NE(serialized.find("attachStatus=Attached"), std::string::npos);
     EXPECT_NE(serialized.find("retryCount=0"), std::string::npos);
     EXPECT_NE(serialized.find("threads=[]"), std::string::npos);
+    EXPECT_NE(serialized.find("lastSeenPid=0"), std::string::npos);
 }

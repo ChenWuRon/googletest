@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <optional>
 
 namespace resource_manager {
 
@@ -49,12 +50,16 @@ public:
     const ConfigNode* parent() const { return parent_; }
     const std::map<std::string, std::unique_ptr<ConfigNode>>& children() const { return children_; }
 
+    void setMatchRule(const MatchRule& rule);
+    std::optional<MatchRule> getMatchRule() const;
+
     std::string path() const;
 
 private:
     ConfigNodeType type_;
     std::string name_;
     std::string value_;
+    std::optional<MatchRule> matchRule_;
     std::size_t source_line_;
     std::size_t source_column_;
     ConfigNode* parent_ = nullptr;

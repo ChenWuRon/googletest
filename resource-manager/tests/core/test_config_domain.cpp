@@ -163,6 +163,23 @@ TEST(ConfigNodeTest, FindChildAfterRemove) {
     EXPECT_EQ(root.findChild("svc"), nullptr);
 }
 
+TEST(ConfigNodeTest, SetAndGetMatchRule) {
+    ConfigNode node(ConfigNodeType::GROUP, "svc");
+    MatchRule rule{"nginx", "prefix"};
+    node.setMatchRule(rule);
+
+    auto result = node.getMatchRule();
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(result->pattern, "nginx");
+    EXPECT_EQ(result->type, "prefix");
+}
+
+TEST(ConfigNodeTest, GetMatchRuleDefault) {
+    ConfigNode node(ConfigNodeType::GROUP, "svc");
+    auto result = node.getMatchRule();
+    EXPECT_FALSE(result.has_value());
+}
+
 TEST(ConfigNodeTest, ParentPointer) {
     ConfigNode root(ConfigNodeType::ROOT, "");
     auto* g = root.addChild(

@@ -7,10 +7,11 @@ TEST(RuntimeStateTest, ProcessCreation) {
     RuntimeState state;
     EXPECT_EQ(state.processState().pid, 0);
     EXPECT_EQ(state.processState().processName, "");
-    EXPECT_FALSE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::None);
     EXPECT_EQ(state.processState().discoveryStatus, DiscoveryStatus::Unknown);
     EXPECT_EQ(state.processState().recoveryStatus, RecoveryState::None);
     EXPECT_EQ(state.processState().retryCount, 0);
+    EXPECT_EQ(state.processState().lastSeenPid, 0);
     EXPECT_TRUE(state.threads().empty());
 }
 
@@ -45,15 +46,36 @@ TEST(RuntimeStateTest, ThreadTracking) {
 
 TEST(RuntimeStateTest, AttachStateChanges) {
     RuntimeState state;
-    EXPECT_FALSE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::None);
     EXPECT_TRUE(state.processState().attachedGroupPath.empty());
 
     state.markAttached("web");
-    EXPECT_TRUE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Attached);
     EXPECT_EQ(state.processState().attachedGroupPath, "web");
 
     state.markDetached();
-    EXPECT_FALSE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Detached);
+}
+
+TEST(RuntimeStateTest, SetAttachStatus) {
+    RuntimeState state;
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::None);
+
+    state.setAttachStatus(AttachStatus::Pending);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Pending);
+
+    state.setAttachStatus(AttachStatus::Failed);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Failed);
+}
+
+TEST(RuntimeStateTest, UpdateLastSeen) {
+    RuntimeState state;
+    state.updatePid(100, "proc");
+    EXPECT_EQ(state.processState().lastSeenPid, 0);
+
+    state.updateLastSeen(200);
+    EXPECT_EQ(state.processState().pid, 200);
+    EXPECT_EQ(state.processState().lastSeenPid, 100);
 }
 
 TEST(RuntimeStateTest, RecoveryStateChanges) {

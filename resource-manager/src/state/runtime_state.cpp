@@ -4,10 +4,7 @@
 
 namespace resource_manager {
 
-RuntimeState::RuntimeState()
-    : processState_{0, "", false, "", {}, {}, DiscoveryStatus::Unknown, RecoveryState::None, 0}
-{
-}
+RuntimeState::RuntimeState() = default;
 
 void RuntimeState::addThread(const ThreadState& thread) {
     threads_.push_back(thread);
@@ -35,13 +32,23 @@ void RuntimeState::updatePid(int pid, const std::string& processName) {
 }
 
 void RuntimeState::markAttached(const std::string& groupPath) {
-    processState_.attached = true;
+    processState_.attachStatus = AttachStatus::Attached;
     processState_.attachedGroupPath = groupPath;
     processState_.attachTimestamp = std::chrono::system_clock::now();
 }
 
 void RuntimeState::markDetached() {
-    processState_.attached = false;
+    processState_.attachStatus = AttachStatus::Detached;
+}
+
+void RuntimeState::setAttachStatus(AttachStatus status) {
+    processState_.attachStatus = status;
+}
+
+void RuntimeState::updateLastSeen(int pid) {
+    processState_.lastSeenPid = processState_.pid;
+    processState_.pid = pid;
+    processState_.lastSeen = std::chrono::system_clock::now();
 }
 
 ProcessState& RuntimeState::processState() {

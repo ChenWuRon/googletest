@@ -125,6 +125,13 @@ TEST(ParserTest, GroupWithMatch) {
     Parser parser(ts);
     auto result = parser.parse();
     EXPECT_TRUE(result.errors.empty());
+
+    auto* g = result.domain.root().findChild("app");
+    ASSERT_NE(g, nullptr);
+    auto rule = g->getMatchRule();
+    ASSERT_TRUE(rule.has_value());
+    EXPECT_EQ(rule->pattern, "nginx");
+    EXPECT_EQ(rule->type, "prefix");
 }
 
 TEST(ParserTest, GroupWithMatchMissingPattern) {
@@ -328,11 +335,25 @@ TEST(ParserTest, FullExample) {
     ASSERT_NE(web->findChild("cpu")->findChild("cpu.max"), nullptr);
     EXPECT_EQ(web->findChild("cpu")->findChild("cpu.max")->value(), "100000 100000");
 
+    {
+        auto rule = web->getMatchRule();
+        ASSERT_TRUE(rule.has_value());
+        EXPECT_EQ(rule->pattern, "nginx");
+        EXPECT_EQ(rule->type, "prefix");
+    }
+
     auto* db = result.domain.root().findChild("db-cluster");
     ASSERT_NE(db, nullptr);
     EXPECT_EQ(db->children().size(), 2);
     ASSERT_NE(db->findChild("pids"), nullptr);
     EXPECT_EQ(db->findChild("pids")->findChild("pids.max")->value(), "1024");
+
+    {
+        auto rule = db->getMatchRule();
+        ASSERT_TRUE(rule.has_value());
+        EXPECT_EQ(rule->pattern, "mysqld");
+        EXPECT_EQ(rule->type, "exact");
+    }
 }
 
 TEST(ParserTest, ExampleConfEquivalence) {
@@ -404,6 +425,11 @@ TEST(ParserTest, ExampleConfEquivalence) {
     EXPECT_EQ(web->children().size(), 3); // cpu, memory, cpuset
     EXPECT_NE(web->findChild("cpuset"), nullptr);
     EXPECT_EQ(web->findChild("cpuset")->findChild("cpuset.cpus")->value(), "0-3");
+
+    auto rule = web->getMatchRule();
+    ASSERT_TRUE(rule.has_value());
+    EXPECT_EQ(rule->pattern, "nginx");
+    EXPECT_EQ(rule->type, "prefix");
 }
 
 // ── Duplicates ──────────────────────────────────────────────────────────
@@ -766,6 +792,13 @@ TEST(ParserTest, MatchTypeWildcard) {
     Parser parser(ts);
     auto result = parser.parse();
     EXPECT_TRUE(result.errors.empty());
+
+    auto* g = result.domain.root().findChild("svc");
+    ASSERT_NE(g, nullptr);
+    auto rule = g->getMatchRule();
+    ASSERT_TRUE(rule.has_value());
+    EXPECT_EQ(rule->pattern, "nginx*");
+    EXPECT_EQ(rule->type, "wildcard");
 }
 
 // ── Multiple errors collected ───────────────────────────────────────────
@@ -886,7 +919,13 @@ TEST(ParserTest, GroupWithModeMatchController) {
     Parser parser(ts);
     auto result = parser.parse();
     EXPECT_TRUE(result.errors.empty());
-    EXPECT_NE(result.domain.root().findChild("full"), nullptr);
+    auto* full = result.domain.root().findChild("full");
+    ASSERT_NE(full, nullptr);
+
+    auto rule = full->getMatchRule();
+    ASSERT_TRUE(rule.has_value());
+    EXPECT_EQ(rule->pattern, "app");
+    EXPECT_EQ(rule->type, "exact");
 }
 
 // ── Only unexpected token at top level ──────────────────────────────────

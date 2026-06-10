@@ -7,9 +7,9 @@
 namespace resource_manager {
 
 bool SnapshotDiff::anyChanged() const {
-    return pidChanged || processNameChanged || attachedChanged ||
+    return pidChanged || processNameChanged || attachStatusChanged ||
            discoveryStatusChanged || recoveryStatusChanged ||
-           retryCountChanged || threadCountChanged;
+           retryCountChanged || threadCountChanged || lastSeenPidChanged;
 }
 
 RuntimeSnapshot RuntimeSnapshot::capture(const RuntimeState& state) {
@@ -27,11 +27,12 @@ SnapshotDiff RuntimeSnapshot::compare(const RuntimeSnapshot& other) const {
     SnapshotDiff diff;
     diff.pidChanged = (pid() != other.pid());
     diff.processNameChanged = (processName() != other.processName());
-    diff.attachedChanged = (attached() != other.attached());
+    diff.attachStatusChanged = (attachStatus() != other.attachStatus());
     diff.discoveryStatusChanged = (discoveryStatus() != other.discoveryStatus());
     diff.recoveryStatusChanged = (recoveryStatus() != other.recoveryStatus());
     diff.retryCountChanged = (retryCount() != other.retryCount());
     diff.threadCountChanged = (threads().size() != other.threads().size());
+    diff.lastSeenPidChanged = (lastSeenPid() != other.lastSeenPid());
     return diff;
 }
 
@@ -44,14 +45,26 @@ static std::string formatTimePoint(const std::chrono::system_clock::time_point& 
     return oss.str();
 }
 
+static const char* attachStatusToString(AttachStatus status) {
+    switch (status) {
+        case AttachStatus::None: return "None";
+        case AttachStatus::Pending: return "Pending";
+        case AttachStatus::Attached: return "Attached";
+        case AttachStatus::Detached: return "Detached";
+        case AttachStatus::Failed: return "Failed";
+    }
+    return "None";
+}
+
 std::string RuntimeSnapshot::serialize() const {
     std::ostringstream oss;
     oss << "RuntimeSnapshot(capturedAt=" << formatTimePoint(capturedAt_)
         << ", pid=" << processState_.pid
         << ", processName=" << processState_.processName
-        << ", attached=" << (processState_.attached ? "true" : "false")
+        << ", attachStatus=" << attachStatusToString(processState_.attachStatus)
         << ", attachTimestamp=" << formatTimePoint(processState_.attachTimestamp)
         << ", lastSeen=" << formatTimePoint(processState_.lastSeen)
+        << ", lastSeenPid=" << processState_.lastSeenPid
         << ", discoveryStatus=" << static_cast<int>(processState_.discoveryStatus)
         << ", recoveryStatus=" << static_cast<int>(processState_.recoveryStatus)
         << ", retryCount=" << processState_.retryCount

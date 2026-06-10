@@ -17,6 +17,7 @@ public:
     bool registerProcess(const std::string& name, int pid);
     bool removeProcess(int pid);
     bool updateProcessPid(const std::string& name, int newPid);
+    bool setProcessAttachStatus(const std::string& name, AttachStatus status);
     bool setProcessRecoveryStatus(const std::string& name, RecoveryState status);
     bool setProcessDiscoveryStatus(const std::string& name, DiscoveryStatus status);
     bool setProcessGroupPath(const std::string& name, const std::string& groupPath);

@@ -48,7 +48,8 @@ ReconciliationResult RuntimeReconciler::reconcileProcess(
 
         case ProcessChangeType::ProcessLost:
             state.processState().discoveryStatus = DiscoveryStatus::Missing;
-            state.processState().recoveryStatus = RecoveryState::None;
+            state.processState().attachStatus = AttachStatus::Pending;
+            state.processState().recoveryStatus = RecoveryState::Detecting;
             return {ReconciliationAction::MarkLost,
                     change.processName, change.pid, change.oldPid};
 

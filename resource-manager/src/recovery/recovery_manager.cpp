@@ -1,4 +1,5 @@
 #include "resource_manager/recovery/recovery_manager.h"
+#include "resource_manager/discovery/discovery_rules.h"
 
 #include <thread>
 #include <algorithm>
@@ -28,7 +29,24 @@ std::optional<Error> RecoveryManager::recoverProcess(const std::string& processN
 
     int oldPid = stateOpt->processState().pid;
 
-    auto info = discovery_.findProcessByName(processName);
+    auto* groupNode = findGroupInConfig(processName);
+    if (!groupNode) {
+        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+        publishEvent(EventType::RecoveryFailed, oldPid, "RecoveryManager");
+        return Error(ErrorCode::ConfigNotFound,
+                     "Group not found in config: " + processName,
+                     "RecoveryManager");
+    }
+
+    std::optional<ProcessInfo> info;
+    auto matchOpt = groupNode->getMatchRule();
+    if (matchOpt) {
+        MatchType matchType = DiscoveryRules::parseType(matchOpt->type);
+        info = discovery_.discoverSingle(*matchOpt, matchType, "RecoveryManager");
+    } else {
+        info = discovery_.findProcessByName(processName);
+    }
+
     if (!info) {
         stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
         publishEvent(EventType::RecoveryFailed, oldPid, "RecoveryManager");
@@ -41,15 +59,6 @@ std::optional<Error> RecoveryManager::recoverProcess(const std::string& processN
         stateManager_.updateProcessPid(processName, info->pid);
     }
     stateManager_.setProcessDiscoveryStatus(processName, DiscoveryStatus::Discovered);
-
-    auto* groupNode = findGroupInConfig(processName);
-    if (!groupNode) {
-        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
-        publishEvent(EventType::RecoveryFailed, info->pid, "RecoveryManager");
-        return Error(ErrorCode::ConfigNotFound,
-                     "Group not found in config: " + processName,
-                     "RecoveryManager");
-    }
 
     auto freshState = stateManager_.findByName(processName);
     if (!freshState) {

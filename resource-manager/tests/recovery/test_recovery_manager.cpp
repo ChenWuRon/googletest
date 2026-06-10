@@ -19,8 +19,9 @@ static void setupTestConfig(ConfigRepository& repo) {
 class MockRecoveryDiscovery : public IProcessDiscovery {
 public:
     std::optional<ProcessInfo> findProcess(const MatchRule& rule) override {
+        MatchType type = DiscoveryRules::parseType(rule.type);
         for (const auto& info : processes_) {
-            if (DiscoveryRules::match(info.comm, MatchType::Exact, rule.pattern)) {
+            if (DiscoveryRules::match(rule.pattern, type, info.comm)) {
                 return info;
             }
         }
@@ -29,8 +30,9 @@ public:
 
     std::optional<std::vector<ProcessInfo>> findProcesses(const MatchRule& rule) override {
         std::vector<ProcessInfo> results;
+        MatchType type = DiscoveryRules::parseType(rule.type);
         for (const auto& info : processes_) {
-            if (DiscoveryRules::match(info.comm, MatchType::Exact, rule.pattern)) {
+            if (DiscoveryRules::match(rule.pattern, type, info.comm)) {
                 results.push_back(info);
             }
         }
@@ -184,6 +186,71 @@ TEST_F(RecoveryManagerTest, RecoveryFailedEvent) {
         }
     }
     EXPECT_TRUE(foundFailed);
+}
+
+TEST_F(RecoveryManagerTest, RecoverWithMatchRuleExact) {
+    // Add a group with an exact-match rule via config
+    configRepo_.loadFromString(
+        "group match_exact_group {\n"
+        "    match \"exact_proc\" {\n"
+        "        type exact;\n"
+        "    }\n"
+        "}\n"
+    );
+
+    stateManager_.registerProcess("match_exact_group", 500);
+    mockPtr_->addProcess(500, "exact_proc");
+
+    auto err = recoveryManager_->recoverProcess("match_exact_group");
+    EXPECT_FALSE(err.has_value());
+
+    auto state = stateManager_.findByName("match_exact_group");
+    ASSERT_TRUE(state.has_value());
+    EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Recovered);
+    EXPECT_EQ(state->processState().attachedGroupPath, "match_exact_group");
+}
+
+TEST_F(RecoveryManagerTest, RecoverWithMatchRulePrefix) {
+    // Add a group with a prefix-match rule via config
+    configRepo_.loadFromString(
+        "group match_prefix_group {\n"
+        "    match \"prefix_proc\" {\n"
+        "        type prefix;\n"
+        "    }\n"
+        "}\n"
+    );
+
+    stateManager_.registerProcess("match_prefix_group", 600);
+    mockPtr_->addProcess(600, "prefix_proc_123");
+
+    auto err = recoveryManager_->recoverProcess("match_prefix_group");
+    EXPECT_FALSE(err.has_value());
+
+    auto state = stateManager_.findByName("match_prefix_group");
+    ASSERT_TRUE(state.has_value());
+    EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Recovered);
+    EXPECT_EQ(state->processState().attachedGroupPath, "match_prefix_group");
+}
+
+TEST_F(RecoveryManagerTest, RecoverWithMatchRuleNotFound) {
+    // Group has a match rule but no process matches
+    configRepo_.loadFromString(
+        "group match_notfound_group {\n"
+        "    match \"nonexistent\" {\n"
+        "        type exact;\n"
+        "    }\n"
+        "}\n"
+    );
+
+    stateManager_.registerProcess("match_notfound_group", 700);
+
+    auto err = recoveryManager_->recoverProcess("match_notfound_group");
+    ASSERT_TRUE(err.has_value());
+    EXPECT_EQ(err->code, ErrorCode::ProcessNotFound);
+
+    auto state = stateManager_.findByName("match_notfound_group");
+    ASSERT_TRUE(state.has_value());
+    EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Failed);
 }
 
 

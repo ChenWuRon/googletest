@@ -50,7 +50,7 @@ TEST_F(AttachEngineTest, SuccessfulAttach) {
     auto err = engine.attach(*group, state);
     EXPECT_FALSE(err.has_value());
     EXPECT_TRUE(mockPtr_->exists("web"));
-    EXPECT_TRUE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Attached);
     EXPECT_EQ(state.processState().attachedGroupPath, "web");
 
     auto val = mockPtr_->getValue("web", "cpu.max");
@@ -104,11 +104,11 @@ TEST_F(AttachEngineTest, Detach) {
     state.updatePid(1234, "web");
 
     engine.attach(*group, state);
-    EXPECT_TRUE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Attached);
 
     auto err = engine.detach(state);
     EXPECT_FALSE(err.has_value());
-    EXPECT_FALSE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Detached);
     EXPECT_FALSE(mockPtr_->exists("web"));
 }
 
@@ -124,7 +124,7 @@ TEST_F(AttachEngineTest, Reattach) {
 
     auto err = engine.reattach(*group, state);
     EXPECT_FALSE(err.has_value());
-    EXPECT_TRUE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachStatus, AttachStatus::Attached);
     EXPECT_EQ(state.processState().attachedGroupPath, "web");
 }
 

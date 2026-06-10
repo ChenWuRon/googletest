@@ -100,7 +100,7 @@ void Parser::parse_group_body(ConfigNode& group) {
         if (match(TokenType::MODE)) {
             parse_mode_statement();
         } else if (match(TokenType::MATCH)) {
-            parse_match_statement();
+            parse_match_statement(group);
         } else if (match(TokenType::CONTROLLER)) {
             parse_controller(group);
         } else if (match(TokenType::ITEM)) {
@@ -132,12 +132,14 @@ void Parser::parse_mode_statement() {
     }
 }
 
-void Parser::parse_match_statement() {
+void Parser::parse_match_statement(ConfigNode& group) {
     if (!check(TokenType::STRING)) {
         error(peek(), "expected match pattern string");
         synchronize_group_body();
         return;
     }
+    const Token& patternTok = peek();
+    std::string pattern = patternTok.lexeme;
     advance();
 
     if (!match(TokenType::LBRACE)) {
@@ -146,13 +148,14 @@ void Parser::parse_match_statement() {
         return;
     }
 
-
+    std::string matchType;
     if (!match(TokenType::TYPE)) {
         error(peek(), "expected 'type' in match block");
     } else {
         if (!check(TokenType::IDENTIFIER)) {
             error(peek(), "expected match type value");
         } else {
+            matchType = peek().lexeme;
             advance();
         }
 
@@ -163,6 +166,10 @@ void Parser::parse_match_statement() {
 
     if (!match(TokenType::RBRACE)) {
         error(peek(), "expected '}' at end of match block");
+    }
+
+    if (!matchType.empty()) {
+        group.setMatchRule({std::move(pattern), std::move(matchType)});
     }
 }
 

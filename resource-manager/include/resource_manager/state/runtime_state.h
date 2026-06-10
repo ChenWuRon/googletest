@@ -5,6 +5,8 @@
 #include <chrono>
 #include <optional>
 
+#include "resource_manager/mode/mode.h"
+
 namespace resource_manager {
 
 enum class RecoveryState {
@@ -23,21 +25,44 @@ enum class DiscoveryStatus {
     Excluded,
 };
 
+enum class AttachStatus {
+    None,
+    Pending,
+    Attached,
+    Detached,
+    Failed,
+};
+
 struct ThreadState {
     int tid;
     std::string threadName;
 };
 
 struct ProcessState {
-    int pid;
+    // Process Identity (survives restart conceptually)
+    Mode mode;
     std::string processName;
-    bool attached;
+    std::string matchPattern;
+    std::string serviceName;
+
+    // Livelihood (changes on restart)
+    int pid = 0;
+
+    // Status (three orthogonal dimensions)
+    AttachStatus attachStatus = AttachStatus::None;
+    DiscoveryStatus discoveryStatus = DiscoveryStatus::Unknown;
+    RecoveryState recoveryStatus = RecoveryState::None;
+
+    // Attachment context
     std::string attachedGroupPath;
     std::chrono::system_clock::time_point attachTimestamp;
+
+    // Last seen tracking
     std::chrono::system_clock::time_point lastSeen;
-    DiscoveryStatus discoveryStatus;
-    RecoveryState recoveryStatus;
-    int retryCount;
+    int lastSeenPid = 0;
+
+    // Retry
+    int retryCount = 0;
 };
 
 class RuntimeState {
@@ -51,6 +76,8 @@ public:
     void updatePid(int pid, const std::string& processName);
     void markAttached(const std::string& groupPath = "");
     void markDetached();
+    void setAttachStatus(AttachStatus status);
+    void updateLastSeen(int pid);
 
     ProcessState& processState();
     const ProcessState& processState() const;
@@ -63,7 +90,9 @@ private:
 };
 
 struct ConfigState {
-    // Placeholder: will hold the ConfigDomain Tree reference
+    std::string source;
+    std::chrono::system_clock::time_point loaded_at;
+    std::size_t version = 0;
 };
 
 } // namespace resource_manager

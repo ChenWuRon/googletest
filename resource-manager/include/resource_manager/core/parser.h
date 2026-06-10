@@ -43,7 +43,7 @@ private:
     ConfigNode* parse_group(ConfigNode& parent);
     void parse_group_body(ConfigNode& group);
     void parse_mode_statement();
-    void parse_match_statement();
+    void parse_match_statement(ConfigNode& group);
     void parse_controller(ConfigNode& parent);
     void parse_item(ConfigNode& parent);
 

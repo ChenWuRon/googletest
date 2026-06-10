@@ -1,4 +1,5 @@
 set(SOURCES
+    core/config_differ.cpp
     core/config_domain.cpp
     core/config_loader.cpp
     core/config_parser.cpp

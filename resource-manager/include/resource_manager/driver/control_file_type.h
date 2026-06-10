@@ -1,12 +1,10 @@
 #pragma once
 
-// ADR-009 Controller Model
-// ControlFileType: unified abstraction for all cgroup control files.
-// Includes name, value_type, version, default_value.
-
 #include <string>
+#include <vector>
 #include <map>
 #include <memory>
+#include <shared_mutex>
 
 #include "resource_manager/core/config_domain.h"
 
@@ -15,23 +13,35 @@ namespace resource_manager {
 struct ControlFileType {
     std::string name;
     ValueType value_type;
-    int version; // 1 | 2
+    int version;
     std::string default_value;
+};
+
+struct ControllerDefinition {
+    std::string name;
+    std::map<std::string, ControlFileType> items;
+    int min_version;
+    int max_version;
 };
 
 class ControllerRegistry {
 public:
     static ControllerRegistry& instance();
 
-    void register_control_file(const std::string& controller, const ControlFileType& type);
-    const ControlFileType* get_control_file(const std::string& controller, const std::string& name) const;
+    void registerController(const ControllerDefinition& ctrl);
+    void registerControlFile(const std::string& controller, const ControlFileType& type);
 
-    // Built-in controllers (cpu, memory, cpuset, io, pids)
-    void register_builtins();
+    const ControllerDefinition* findController(const std::string& name) const;
+    const ControlFileType* findControlFile(const std::string& controller, const std::string& item) const;
+    std::vector<std::string> listControllers() const;
+
+    void registerBuiltins();
 
 private:
     ControllerRegistry() = default;
-    std::map<std::string, std::map<std::string, ControlFileType>> registry_;
+
+    mutable std::shared_mutex mutex_;
+    std::map<std::string, ControllerDefinition> registry_;
 };
 
 } // namespace resource_manager

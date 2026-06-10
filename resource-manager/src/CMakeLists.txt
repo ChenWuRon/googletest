@@ -15,9 +15,14 @@ set(SOURCES
     state/runtime_event.cpp
     state/runtime_state_machine.cpp
     state/runtime_repository.cpp
+    driver/icgroup_driver.cpp
+    driver/icgroup_driver.cpp
     driver/cgroup_v2_driver.cpp
-    driver/cgroup_v1_driver.cpp
     driver/mock_cgroup_driver.cpp
+    driver/control_file_type.cpp
+    driver/resource_applier.cpp
+    driver/control_file_type.cpp
+    driver/resource_applier.cpp
     discovery/procfs_discovery.cpp
     discovery/discovery_rules.cpp
     discovery/discovery_cache.cpp

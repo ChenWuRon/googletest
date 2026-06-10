@@ -20,6 +20,8 @@ set(SOURCES
     driver/mock_cgroup_driver.cpp
     driver/control_file_type.cpp
     driver/resource_applier.cpp
+    driver/resource_validator.cpp
+    driver/resource_snapshot.cpp
     discovery/procfs_discovery.cpp
     discovery/discovery_rules.cpp
     discovery/discovery_cache.cpp

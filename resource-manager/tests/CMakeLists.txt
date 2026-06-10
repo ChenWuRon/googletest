@@ -11,6 +11,8 @@ set(LIB_SOURCES
     ${CMAKE_SOURCE_DIR}/src/core/rule_builder.cpp
     ${CMAKE_SOURCE_DIR}/src/core/validator.cpp
     ${CMAKE_SOURCE_DIR}/src/core/resource_transaction.cpp
+    ${CMAKE_SOURCE_DIR}/src/driver/resource_validator.cpp
+    ${CMAKE_SOURCE_DIR}/src/driver/resource_snapshot.cpp
     ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
     ${CMAKE_SOURCE_DIR}/src/mode/mode.cpp
     ${CMAKE_SOURCE_DIR}/src/state/runtime_state.cpp
@@ -55,6 +57,8 @@ set(TEST_SOURCES
     driver/test_cgroup_v2_driver.cpp
     driver/test_controller_registry.cpp
     driver/test_resource_applier.cpp
+    driver/test_resource_validator.cpp
+    driver/test_resource_snapshot.cpp
     discovery/test_procfs_discovery.cpp
     discovery/test_discovery_rules.cpp
     discovery/test_discovery_cache.cpp

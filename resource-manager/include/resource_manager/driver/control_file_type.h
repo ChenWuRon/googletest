@@ -10,11 +10,20 @@
 
 namespace resource_manager {
 
+struct ValidationRule {
+    std::string pattern;
+    std::string min;
+    std::string max;
+    std::vector<std::string> enums;
+    bool allow_max;
+};
+
 struct ControlFileType {
     std::string name;
     ValueType value_type;
     int version;
     std::string default_value;
+    ValidationRule validation;
 };
 
 struct ControllerDefinition {

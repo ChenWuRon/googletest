@@ -239,3 +239,65 @@ TEST_F(ConfigRepositoryTest, ErrorsClearedOnLoad) {
     repo.load(path_);
     EXPECT_TRUE(repo.errors().empty());
 }
+
+// ── loadFromString ──────────────────────────────────────────────────────
+
+TEST_F(ConfigRepositoryTest, LoadFromStringValid) {
+    ConfigRepository repo;
+    bool ok = repo.loadFromString(R"(group app {
+    controller cpu {
+        item cpu.max = "100";
+    }
+})");
+    EXPECT_TRUE(ok);
+    EXPECT_TRUE(repo.errors().empty());
+
+    auto* g = repo.getRoot().root().findChild("app");
+    ASSERT_NE(g, nullptr);
+    auto* c = g->findChild("cpu");
+    ASSERT_NE(c, nullptr);
+    EXPECT_EQ(c->findChild("cpu.max")->value(), "100");
+}
+
+TEST_F(ConfigRepositoryTest, LoadFromStringSyntaxError) {
+    ConfigRepository repo;
+    bool ok = repo.loadFromString("group app {");
+    EXPECT_FALSE(ok);
+    EXPECT_FALSE(repo.errors().empty());
+}
+
+TEST_F(ConfigRepositoryTest, LoadFromStringStructuralError) {
+    ConfigRepository repo;
+    bool ok = repo.loadFromString(R"(group app {
+    item bad = "x";
+})");
+    EXPECT_FALSE(ok);
+    EXPECT_FALSE(repo.errors().empty());
+}
+
+TEST_F(ConfigRepositoryTest, LoadFromStringEmpty) {
+    ConfigRepository repo;
+    bool ok = repo.loadFromString("");
+    EXPECT_TRUE(ok);
+    EXPECT_TRUE(repo.getRoot().root().children().empty());
+}
+
+TEST_F(ConfigRepositoryTest, LoadFromStringThenLoadFromFile) {
+    ConfigRepository repo;
+
+    EXPECT_TRUE(repo.loadFromString(R"(group web {
+    controller cpu {
+        item cpu.max = "50";
+    }
+})"));
+    EXPECT_NE(repo.getRoot().root().findChild("web"), nullptr);
+
+    write_config(R"(group db {
+    controller memory {
+        item memory.max = "2G";
+    }
+})");
+    EXPECT_TRUE(repo.load(path_));
+    EXPECT_EQ(repo.getRoot().root().findChild("web"), nullptr);
+    EXPECT_NE(repo.getRoot().root().findChild("db"), nullptr);
+}

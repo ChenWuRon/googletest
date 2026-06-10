@@ -1,8 +1,6 @@
 #include "resource_manager/core/config_repository.h"
 
-#include <fstream>
-#include <sstream>
-
+#include "resource_manager/core/config_loader.h"
 #include "resource_manager/lexer/lexer.h"
 #include "resource_manager/core/parser.h"
 #include "resource_manager/core/validator.h"
@@ -10,20 +8,24 @@
 namespace resource_manager {
 
 bool ConfigRepository::load(const std::string& filepath) {
-    clear_errors();
-
-    std::ifstream file(filepath);
-    if (!file.is_open()) {
+    auto content = ConfigLoader().loadFromFile(filepath);
+    if (!content.has_value()) {
+        clear_errors();
         add_error(0, 0, "", "failed to open file: " + filepath);
         return false;
     }
+    return apply_source(content.value());
+}
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    std::string content = buffer.str();
+bool ConfigRepository::loadFromString(const std::string& content) {
+    return apply_source(content);
+}
+
+bool ConfigRepository::apply_source(const std::string& source) {
+    clear_errors();
 
     // ── Lex ─────────────────────────────────────────────────────────────
-    Lexer lexer(content);
+    Lexer lexer(source);
     std::vector<Token> tokens = lexer.tokenize();
 
     for (const auto& tok : tokens) {

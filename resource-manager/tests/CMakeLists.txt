@@ -2,6 +2,7 @@ find_package(GTest REQUIRED)
 
 set(TEST_SOURCES
     core/test_config_domain.cpp
+    core/test_config_loader.cpp
     core/test_config_parser.cpp
     core/test_config_repository.cpp
     core/test_parser.cpp

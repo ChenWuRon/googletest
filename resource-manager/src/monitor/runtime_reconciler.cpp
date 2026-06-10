@@ -1,0 +1,87 @@
+#include "resource_manager/monitor/runtime_reconciler.h"
+
+namespace resource_manager {
+
+std::vector<ReconciliationResult> RuntimeReconciler::reconcile(
+    RuntimeRepository& repo,
+    const ProcessChangeSet& changes) const
+{
+    std::vector<ReconciliationResult> results;
+
+    for (const auto& change : changes.changes) {
+        auto stateOpt = repo.findByName(change.processName);
+        if (!stateOpt) {
+            if (change.type == ProcessChangeType::ProcessCreated) {
+                repo.registerProcess(change.processName, change.pid);
+                results.push_back({ReconciliationAction::UpdatePid,
+                                  change.processName, change.pid, 0});
+            }
+            continue;
+        }
+
+        auto result = reconcileProcess(*stateOpt, change);
+        results.push_back(result);
+
+        if (result.action == ReconciliationAction::MarkLost) {
+            repo.removeProcess(change.pid);
+        } else if (result.action == ReconciliationAction::UpdatePid) {
+            repo.updateProcessPid(change.processName, change.pid);
+            repo.setProcessDiscoveryStatus(change.processName, DiscoveryStatus::Discovered);
+            repo.setProcessRecoveryStatus(change.processName, RecoveryState::Recovered);
+        }
+    }
+
+    return results;
+}
+
+ReconciliationResult RuntimeReconciler::reconcileProcess(
+    RuntimeState& state,
+    const ProcessChange& change) const
+{
+    switch (change.type) {
+        case ProcessChangeType::ProcessCreated:
+            state.updatePid(change.pid, change.processName);
+            state.processState().discoveryStatus = DiscoveryStatus::Discovered;
+            return {ReconciliationAction::UpdatePid,
+                    change.processName, change.pid, 0};
+
+        case ProcessChangeType::ProcessLost:
+            state.processState().discoveryStatus = DiscoveryStatus::Missing;
+            state.processState().recoveryStatus = RecoveryState::None;
+            return {ReconciliationAction::MarkLost,
+                    change.processName, change.pid, change.oldPid};
+
+        case ProcessChangeType::PIDChanged:
+            state.updatePid(change.pid, change.processName);
+            state.processState().discoveryStatus = DiscoveryStatus::Discovered;
+            state.processState().recoveryStatus = RecoveryState::Recovered;
+            return {ReconciliationAction::UpdatePid,
+                    change.processName, change.pid, change.oldPid};
+
+        case ProcessChangeType::ThreadChanged:
+            for (const auto& t : change.newThreads) {
+                auto existing = state.findThread(t.tid);
+                if (!existing) {
+                    state.addThread(t);
+                }
+            }
+            for (const auto& t : change.oldThreads) {
+                bool stillExists = false;
+                for (const auto& nt : change.newThreads) {
+                    if (nt.tid == t.tid) {
+                        stillExists = true;
+                        break;
+                    }
+                }
+                if (!stillExists) {
+                    state.removeThread(t.tid);
+                }
+            }
+            return {ReconciliationAction::NoChange,
+                    change.processName, change.pid, change.oldPid};
+    }
+
+    return {ReconciliationAction::NoChange, "", 0, 0};
+}
+
+} // namespace resource_manager

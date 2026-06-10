@@ -33,6 +33,8 @@ public:
 
     const std::vector<RuntimeEvent>& events() const;
 
+    IProcessDiscovery& discovery();
+
 private:
     void publishEvent(EventType type, int pid, const std::string& source);
 

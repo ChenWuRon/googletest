@@ -15,6 +15,9 @@ public:
     RuntimeRepository() = default;
 
     bool registerProcess(const std::string& name, int pid);
+    bool updateProcessPid(const std::string& name, int newPid);
+    bool setProcessRecoveryStatus(const std::string& name, RecoveryState status);
+    bool setProcessDiscoveryStatus(const std::string& name, DiscoveryStatus status);
     bool removeProcess(int pid);
     std::optional<RuntimeState> findByPid(int pid) const;
     std::optional<RuntimeState> findByName(const std::string& name) const;

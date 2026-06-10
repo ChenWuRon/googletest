@@ -1,34 +1,51 @@
 #pragma once
 
-// ADR-008 Recovery
-// Monitor detects PID changes and triggers Recovery flow.
-// Collaborates with Discovery and AttachEngine.
-
-#include <memory>
+#include <atomic>
+#include <thread>
+#include <chrono>
+#include <vector>
 #include <functional>
 
-#include "resource_manager/state/runtime_state.h"
-#include "resource_manager/discovery/iprocess_discovery.h"
-#include "resource_manager/attach/attach_engine.h"
+#include "resource_manager/state/runtime_repository.h"
+#include "resource_manager/discovery/discovery_service.h"
+#include "resource_manager/state/runtime_event.h"
+#include "resource_manager/monitor/process_watcher.h"
+#include "resource_manager/monitor/runtime_reconciler.h"
 
 namespace resource_manager {
 
 class Monitor {
 public:
     Monitor(
-        std::unique_ptr<IProcessDiscovery> discovery,
-        std::unique_ptr<AttachEngine> attach_engine
-    );
-    ~Monitor() = default;
+        RuntimeRepository& repo,
+        DiscoveryService& discovery,
+        std::chrono::milliseconds interval = std::chrono::seconds(5));
+
+    ~Monitor();
+
+    Monitor(const Monitor&) = delete;
+    Monitor& operator=(const Monitor&) = delete;
 
     void start();
     void stop();
-    void check(); // single check cycle
+    bool isRunning() const;
+
+    std::vector<RuntimeEvent> poll();
+
+    std::vector<RuntimeEvent> events() const;
 
 private:
-    std::unique_ptr<IProcessDiscovery> discovery_;
-    std::unique_ptr<AttachEngine> attach_engine_;
-    bool running_;
+    void loop();
+
+    RuntimeRepository& repo_;
+    DiscoveryService& discovery_;
+    std::chrono::milliseconds interval_;
+    std::atomic<bool> running_;
+    std::unique_ptr<std::thread> thread_;
+    ProcessWatcher watcher_;
+    RuntimeReconciler reconciler_;
+    std::vector<RuntimeEvent> events_;
+    mutable std::mutex eventsMutex_;
 };
 
 } // namespace resource_manager

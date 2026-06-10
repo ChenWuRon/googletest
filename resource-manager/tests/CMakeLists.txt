@@ -33,6 +33,9 @@ set(LIB_SOURCES
     ${CMAKE_SOURCE_DIR}/src/attach/attach_policy.cpp
     ${CMAKE_SOURCE_DIR}/src/attach/attach_tracker.cpp
     ${CMAKE_SOURCE_DIR}/src/monitor/monitor.cpp
+    ${CMAKE_SOURCE_DIR}/src/monitor/process_watcher.cpp
+    ${CMAKE_SOURCE_DIR}/src/monitor/runtime_reconciler.cpp
+    ${CMAKE_SOURCE_DIR}/src/recovery/recovery_manager.cpp
     ${CMAKE_SOURCE_DIR}/src/log/logger.cpp
 )
 
@@ -68,6 +71,10 @@ set(TEST_SOURCES
     attach/test_attach_tracker.cpp
     error/test_error.cpp
     log/test_logger.cpp
+    monitor/test_monitor.cpp
+    monitor/test_process_watcher.cpp
+    monitor/test_runtime_reconciler.cpp
+    recovery/test_recovery_manager.cpp
 )
 
 add_executable(resource-manager-tests ${LIB_SOURCES} ${TEST_SOURCES})

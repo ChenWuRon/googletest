@@ -22,6 +22,62 @@ bool RuntimeRepository::registerProcess(const std::string& name, int pid) {
     return true;
 }
 
+bool RuntimeRepository::updateProcessPid(const std::string& name, int newPid) {
+    std::unique_lock lock(mutex_);
+
+    auto nit = nameToPid_.find(name);
+    if (nit == nameToPid_.end()) {
+        return false;
+    }
+    int oldPid = nit->second;
+    if (oldPid == newPid) {
+        return true;
+    }
+    auto oldIt = byPid_.find(oldPid);
+    if (oldIt == byPid_.end()) {
+        return false;
+    }
+    if (byPid_.find(newPid) != byPid_.end()) {
+        return false;
+    }
+    auto state = std::move(oldIt->second);
+    state.processState().pid = newPid;
+    byPid_.erase(oldIt);
+    byPid_[newPid] = std::move(state);
+    nit->second = newPid;
+    return true;
+}
+
+bool RuntimeRepository::setProcessRecoveryStatus(const std::string& name, RecoveryState status) {
+    std::unique_lock lock(mutex_);
+
+    auto nit = nameToPid_.find(name);
+    if (nit == nameToPid_.end()) {
+        return false;
+    }
+    auto it = byPid_.find(nit->second);
+    if (it == byPid_.end()) {
+        return false;
+    }
+    it->second.processState().recoveryStatus = status;
+    return true;
+}
+
+bool RuntimeRepository::setProcessDiscoveryStatus(const std::string& name, DiscoveryStatus status) {
+    std::unique_lock lock(mutex_);
+
+    auto nit = nameToPid_.find(name);
+    if (nit == nameToPid_.end()) {
+        return false;
+    }
+    auto it = byPid_.find(nit->second);
+    if (it == byPid_.end()) {
+        return false;
+    }
+    it->second.processState().discoveryStatus = status;
+    return true;
+}
+
 bool RuntimeRepository::removeProcess(int pid) {
     std::unique_lock lock(mutex_);
 

@@ -31,6 +31,9 @@ set(SOURCES
     attach/attach_tracker.cpp
     core/resource_transaction.cpp
     monitor/monitor.cpp
+    monitor/process_watcher.cpp
+    monitor/runtime_reconciler.cpp
+    recovery/recovery_manager.cpp
     log/logger.cpp
     main/main.cpp
 )

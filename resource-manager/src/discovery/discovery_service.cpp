@@ -61,4 +61,8 @@ void DiscoveryService::publishEvent(EventType type, int pid, const std::string& 
     events_.emplace_back(type, pid, source);
 }
 
+IProcessDiscovery& DiscoveryService::discovery() {
+    return *discovery_;
+}
+
 } // namespace resource_manager

@@ -81,7 +81,8 @@ ConfigNode* Parser::parse_group(ConfigNode& parent) {
         return nullptr;
     }
 
-    auto group = std::make_unique<ConfigNode>(ConfigNodeType::GROUP, name);
+    auto group = std::make_unique<ConfigNode>(ConfigNodeType::GROUP, name, "",
+                                              name_tok.line, name_tok.column);
     ConfigNode* raw = parent.addChild(std::move(group));
     if (!raw) {
         error(name_tok, "duplicate group '" + name + "'");
@@ -179,7 +180,8 @@ void Parser::parse_controller(ConfigNode& parent) {
         return;
     }
 
-    auto controller = std::make_unique<ConfigNode>(ConfigNodeType::CONTROLLER, name);
+    auto controller = std::make_unique<ConfigNode>(ConfigNodeType::CONTROLLER, name, "",
+                                                   name_tok.line, name_tok.column);
     ConfigNode* raw = parent.addChild(std::move(controller));
     if (!raw) {
         error(name_tok, "duplicate controller '" + name + "' in group");
@@ -228,7 +230,8 @@ void Parser::parse_item(ConfigNode& parent) {
     std::string value = peek().lexeme;
     advance();
 
-    auto item = std::make_unique<ConfigNode>(ConfigNodeType::ITEM, name, value);
+    auto item = std::make_unique<ConfigNode>(ConfigNodeType::ITEM, name, value,
+                                              name_tok.line, name_tok.column);
     if (!parent.addChild(std::move(item))) {
         error(name_tok, "duplicate item '" + name + "' in controller");
     }

@@ -2,8 +2,17 @@
 
 namespace resource_manager {
 
-ConfigNode::ConfigNode(ConfigNodeType type, std::string name, std::string value)
-    : type_(type), name_(std::move(name)), value_(std::move(value)) {}
+ConfigNode::ConfigNode(ConfigNodeType type, std::string name, std::string value,
+                       std::size_t source_line, std::size_t source_column)
+    : type_(type), name_(std::move(name)), value_(std::move(value))
+    , source_line_(source_line), source_column_(source_column) {}
+
+std::string ConfigNode::path() const {
+    if (!parent_ || parent_->type() == ConfigNodeType::ROOT) {
+        return "/" + name_;
+    }
+    return parent_->path() + "/" + name_;
+}
 
 ConfigNode* ConfigNode::addChild(std::unique_ptr<ConfigNode> child) {
     if (!child) return nullptr;

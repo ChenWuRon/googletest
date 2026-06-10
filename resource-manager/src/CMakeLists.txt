@@ -3,6 +3,7 @@ set(SOURCES
     core/config_parser.cpp
     core/parser.cpp
     core/rule_builder.cpp
+    core/validator.cpp
     lexer/lexer.cpp
     mode/mode.cpp
     state/runtime_state.cpp

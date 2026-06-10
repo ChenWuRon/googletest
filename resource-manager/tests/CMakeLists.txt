@@ -4,6 +4,7 @@ set(TEST_SOURCES
     core/test_config_domain.cpp
     core/test_config_parser.cpp
     core/test_parser.cpp
+    core/test_validator.cpp
     lexer/test_lexer.cpp
     mode/test_mode.cpp
     state/test_runtime_state.cpp

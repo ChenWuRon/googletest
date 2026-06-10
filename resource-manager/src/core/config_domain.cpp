@@ -2,8 +2,8 @@
 
 namespace resource_manager {
 
-ConfigNode::ConfigNode(ConfigNodeType type, std::string name)
-    : type_(type), name_(std::move(name)) {}
+ConfigNode::ConfigNode(ConfigNodeType type, std::string name, std::string value)
+    : type_(type), name_(std::move(name)), value_(std::move(value)) {}
 
 ConfigNode* ConfigNode::addChild(std::unique_ptr<ConfigNode> child) {
     if (!child) return nullptr;

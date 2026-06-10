@@ -31,7 +31,7 @@ enum class ConfigNodeType {
 
 class ConfigNode {
 public:
-    ConfigNode(ConfigNodeType type, std::string name);
+    ConfigNode(ConfigNodeType type, std::string name, std::string value = "");
     ~ConfigNode() = default;
 
     ConfigNode* addChild(std::unique_ptr<ConfigNode> child);
@@ -41,6 +41,7 @@ public:
 
     ConfigNodeType type() const { return type_; }
     const std::string& name() const { return name_; }
+    const std::string& value() const { return value_; }
     ConfigNode* parent() { return parent_; }
     const ConfigNode* parent() const { return parent_; }
     const std::map<std::string, std::unique_ptr<ConfigNode>>& children() const { return children_; }
@@ -48,6 +49,7 @@ public:
 private:
     ConfigNodeType type_;
     std::string name_;
+    std::string value_;
     ConfigNode* parent_ = nullptr;
     std::map<std::string, std::unique_ptr<ConfigNode>> children_;
 };
@@ -57,6 +59,9 @@ public:
     ConfigDomain()
         : root_(std::make_unique<ConfigNode>(ConfigNodeType::ROOT, "")) {}
     ~ConfigDomain() = default;
+
+    ConfigDomain(ConfigDomain&&) = default;
+    ConfigDomain& operator=(ConfigDomain&&) = default;
 
     ConfigNode& root() { return *root_; }
     const ConfigNode& root() const { return *root_; }

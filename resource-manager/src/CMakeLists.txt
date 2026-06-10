@@ -1,6 +1,7 @@
 set(SOURCES
     core/config_domain.cpp
     core/config_parser.cpp
+    core/parser.cpp
     core/rule_builder.cpp
     lexer/lexer.cpp
     mode/mode.cpp

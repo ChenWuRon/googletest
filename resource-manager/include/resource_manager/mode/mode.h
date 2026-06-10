@@ -28,9 +28,9 @@ enum class EntityType {
 };
 
 struct Mode {
-    ServiceType service;
-    NamespaceType ns;
-    EntityType entity;
+    ServiceType service = ServiceType::None;
+    NamespaceType ns = NamespaceType::None;
+    EntityType entity = EntityType::None;
 };
 
 bool operator==(const Mode& lhs, const Mode& rhs);

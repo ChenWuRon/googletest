@@ -103,6 +103,8 @@ void Parser::parse_group_body(ConfigNode& group) {
             parse_match_statement();
         } else if (match(TokenType::CONTROLLER)) {
             parse_controller(group);
+        } else if (match(TokenType::ITEM)) {
+            parse_item(group);
         } else if (match(TokenType::GROUP)) {
             error(previous(), "nested groups are not allowed");
             parse_group(group);

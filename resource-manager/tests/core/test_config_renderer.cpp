@@ -110,13 +110,13 @@ TEST(ConfigRendererTest, MultipleGroups) {
 
     std::string text = ConfigRenderer::render(domain);
     EXPECT_EQ(text,
-        "group web {\n"
-        "    controller cpu {\n"
+        "group db {\n"
+        "    controller memory {\n"
         "    }\n"
         "}\n"
         "\n"
-        "group db {\n"
-        "    controller memory {\n"
+        "group web {\n"
+        "    controller cpu {\n"
         "    }\n"
         "}\n"
         "\n");

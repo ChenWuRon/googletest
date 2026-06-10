@@ -6,10 +6,10 @@
 namespace resource_manager {
 
 Monitor::Monitor(
-    RuntimeRepository& repo,
+    RuntimeStateManager& stateManager,
     DiscoveryService& discovery,
     std::chrono::milliseconds interval)
-    : repo_(repo)
+    : stateManager_(stateManager)
     , discovery_(discovery)
     , interval_(interval)
     , running_(false)
@@ -41,14 +41,13 @@ bool Monitor::isRunning() const {
 
 std::vector<RuntimeEvent> Monitor::poll() {
     std::vector<RuntimeEvent> newEvents;
-    auto allStates = repo_.getAll();
+    auto allStates = stateManager_.getAll();
 
     for (const auto& state : allStates) {
         int pid = state.processState().pid;
         if (pid <= 0) continue;
 
-        auto info = discovery_.discovery().findProcess(
-            MatchRule{state.processState().processName, "exact"});
+        auto info = discovery_.findProcessByName(state.processState().processName);
 
         if (info && info->pid != pid) {
             ProcessChange change;
@@ -60,11 +59,11 @@ std::vector<RuntimeEvent> Monitor::poll() {
             ProcessChangeSet changes;
             changes.changes.push_back(std::move(change));
 
-            reconciler_.reconcile(repo_, changes);
+            reconciler_.reconcile(stateManager_, changes);
 
             newEvents.emplace_back(EventType::ProcessRestarted, info->pid, "Monitor");
         } else if (!info) {
-            bool exists = discovery_.discovery().exists(pid);
+            bool exists = discovery_.exists(pid);
             if (!exists) {
                 ProcessChange change;
                 change.type = ProcessChangeType::ProcessLost;
@@ -74,7 +73,7 @@ std::vector<RuntimeEvent> Monitor::poll() {
                 ProcessChangeSet changes;
                 changes.changes.push_back(std::move(change));
 
-                reconciler_.reconcile(repo_, changes);
+                reconciler_.reconcile(stateManager_, changes);
 
                 newEvents.emplace_back(EventType::ProcessLost, pid, "Monitor");
             }

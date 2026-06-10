@@ -3,8 +3,18 @@
 
 #include "resource_manager/recovery/recovery_manager.h"
 #include "resource_manager/discovery/discovery_rules.h"
+#include "resource_manager/driver/mock_cgroup_driver.h"
 
 using namespace resource_manager;
+
+static void setupTestConfig(ConfigRepository& repo) {
+    repo.loadFromString(
+        "group proc_a {\n"
+        "}\n"
+        "group proc_b {\n"
+        "}\n"
+    );
+}
 
 class MockRecoveryDiscovery : public IProcessDiscovery {
 public:
@@ -53,21 +63,28 @@ private:
 class RecoveryManagerTest : public ::testing::Test {
 protected:
     void SetUp() override {
+        setupTestConfig(configRepo_);
+
         auto mock = std::make_unique<MockRecoveryDiscovery>();
         mockPtr_ = mock.get();
         mockPtr_->addProcess(100, "proc_a");
         mockPtr_->addProcess(200, "proc_b");
 
-        repo_.registerProcess("proc_a", 100);
-        repo_.registerProcess("proc_b", 200);
+        stateManager_.registerProcess("proc_a", 100);
+        stateManager_.registerProcess("proc_b", 200);
 
-        discoveryService_ = std::make_unique<DiscoveryService>(std::move(mock), repo_);
-        recoveryManager_ = std::make_unique<RecoveryManager>(repo_, *discoveryService_);
+        discoveryService_ = std::make_unique<DiscoveryService>(std::move(mock), stateManager_);
+        attachEngine_ = std::make_unique<AttachEngine>(
+            std::make_unique<MockCgroupDriver>());
+        recoveryManager_ = std::make_unique<RecoveryManager>(
+            stateManager_, *discoveryService_, *attachEngine_, configRepo_);
     }
 
-    RuntimeRepository repo_;
+    ConfigRepository configRepo_;
+    RuntimeStateManager stateManager_;
     MockRecoveryDiscovery* mockPtr_;
     std::unique_ptr<DiscoveryService> discoveryService_;
+    std::unique_ptr<AttachEngine> attachEngine_;
     std::unique_ptr<RecoveryManager> recoveryManager_;
 };
 
@@ -75,9 +92,23 @@ TEST_F(RecoveryManagerTest, RecoverExistingProcess) {
     auto err = recoveryManager_->recoverProcess("proc_a");
     EXPECT_FALSE(err.has_value());
 
-    auto state = repo_.findByPid(100);
+    auto state = stateManager_.findByPid(100);
     ASSERT_TRUE(state.has_value());
     EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Recovered);
+    EXPECT_EQ(state->processState().attachedGroupPath, "proc_a");
+}
+
+TEST_F(RecoveryManagerTest, RecoverConfigGroupMismatch) {
+    mockPtr_->addProcess(400, "no_config_group");
+    stateManager_.registerProcess("no_config_group", 400);
+
+    auto err = recoveryManager_->recoverProcess("no_config_group");
+    ASSERT_TRUE(err.has_value());
+    EXPECT_EQ(err->code, ErrorCode::ConfigNotFound);
+
+    auto state = stateManager_.findByName("no_config_group");
+    ASSERT_TRUE(state.has_value());
+    EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Failed);
 }
 
 TEST_F(RecoveryManagerTest, RecoverNonexistentProcess) {
@@ -93,15 +124,16 @@ TEST_F(RecoveryManagerTest, RecoverWithNewPID) {
     auto err = recoveryManager_->recoverProcess("proc_a");
     EXPECT_FALSE(err.has_value());
 
-    auto state = repo_.findByPid(300);
+    auto state = stateManager_.findByPid(300);
     ASSERT_TRUE(state.has_value());
     EXPECT_EQ(state->processState().pid, 300);
     EXPECT_EQ(state->processState().recoveryStatus, RecoveryState::Recovered);
+    EXPECT_EQ(state->processState().attachedGroupPath, "proc_a");
 }
 
 TEST_F(RecoveryManagerTest, RecoverAll) {
-    repo_.registerProcess("proc_c", 300);
-    auto state = repo_.findByName("proc_c");
+    stateManager_.registerProcess("proc_c", 300);
+    auto state = stateManager_.findByName("proc_c");
     ASSERT_TRUE(state.has_value());
     state->processState().discoveryStatus = DiscoveryStatus::Missing;
 
@@ -153,3 +185,5 @@ TEST_F(RecoveryManagerTest, RecoveryFailedEvent) {
     }
     EXPECT_TRUE(foundFailed);
 }
+
+

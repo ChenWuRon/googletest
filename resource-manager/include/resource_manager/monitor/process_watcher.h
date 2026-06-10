@@ -4,7 +4,7 @@
 #include <string>
 
 #include "resource_manager/state/runtime_snapshot.h"
-#include "resource_manager/state/runtime_repository.h"
+#include "resource_manager/state/runtime_state_manager.h"
 #include "resource_manager/discovery/iprocess_discovery.h"
 
 namespace resource_manager {
@@ -37,7 +37,7 @@ class ProcessWatcher {
 public:
     ProcessChangeSet detectDiscoveryChanges(
         const std::vector<ProcessInfo>& discovered,
-        const RuntimeRepository& repo) const;
+        const RuntimeStateManager& stateManager) const;
 
     ProcessChangeSet detectSnapshotChanges(
         const RuntimeSnapshot& oldSnap,

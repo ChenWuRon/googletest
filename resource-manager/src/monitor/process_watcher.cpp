@@ -18,12 +18,12 @@ void ProcessChangeSet::clear() {
 
 ProcessChangeSet ProcessWatcher::detectDiscoveryChanges(
     const std::vector<ProcessInfo>& discovered,
-    const RuntimeRepository& repo) const
+    const RuntimeStateManager& stateManager) const
 {
     ProcessChangeSet result;
 
     for (const auto& info : discovered) {
-        auto existing = repo.findByName(info.comm);
+        auto existing = stateManager.findByName(info.comm);
         if (!existing) {
             ProcessChange change;
             change.type = ProcessChangeType::ProcessCreated;
@@ -40,7 +40,7 @@ ProcessChangeSet ProcessWatcher::detectDiscoveryChanges(
         }
     }
 
-    auto allStates = repo.getAll();
+    auto allStates = stateManager.getAll();
     for (const auto& state : allStates) {
         int pid = state.processState().pid;
         auto it = std::find_if(discovered.begin(), discovered.end(),

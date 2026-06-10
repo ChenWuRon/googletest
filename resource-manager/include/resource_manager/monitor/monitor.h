@@ -6,7 +6,7 @@
 #include <vector>
 #include <functional>
 
-#include "resource_manager/state/runtime_repository.h"
+#include "resource_manager/state/runtime_state_manager.h"
 #include "resource_manager/discovery/discovery_service.h"
 #include "resource_manager/state/runtime_event.h"
 #include "resource_manager/monitor/process_watcher.h"
@@ -17,7 +17,7 @@ namespace resource_manager {
 class Monitor {
 public:
     Monitor(
-        RuntimeRepository& repo,
+        RuntimeStateManager& stateManager,
         DiscoveryService& discovery,
         std::chrono::milliseconds interval = std::chrono::seconds(5));
 
@@ -37,12 +37,11 @@ public:
 private:
     void loop();
 
-    RuntimeRepository& repo_;
+    RuntimeStateManager& stateManager_;
     DiscoveryService& discovery_;
     std::chrono::milliseconds interval_;
     std::atomic<bool> running_;
     std::unique_ptr<std::thread> thread_;
-    ProcessWatcher watcher_;
     RuntimeReconciler reconciler_;
     std::vector<RuntimeEvent> events_;
     mutable std::mutex eventsMutex_;

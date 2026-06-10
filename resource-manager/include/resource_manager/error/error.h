@@ -15,6 +15,7 @@ enum class ErrorCode {
     ConfigParseError,
     ConfigValidationError,
     ConfigFileNotFound,
+    ConfigNotFound,
 
     // Mode
     InvalidMode,

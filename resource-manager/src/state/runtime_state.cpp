@@ -5,7 +5,7 @@
 namespace resource_manager {
 
 RuntimeState::RuntimeState()
-    : processState_{0, "", false, {}, {}, DiscoveryStatus::Unknown, RecoveryState::None, 0}
+    : processState_{0, "", false, "", {}, {}, DiscoveryStatus::Unknown, RecoveryState::None, 0}
 {
 }
 
@@ -34,8 +34,9 @@ void RuntimeState::updatePid(int pid, const std::string& processName) {
     processState_.processName = processName;
 }
 
-void RuntimeState::markAttached() {
+void RuntimeState::markAttached(const std::string& groupPath) {
     processState_.attached = true;
+    processState_.attachedGroupPath = groupPath;
     processState_.attachTimestamp = std::chrono::system_clock::now();
 }
 

@@ -46,9 +46,11 @@ TEST(RuntimeStateTest, ThreadTracking) {
 TEST(RuntimeStateTest, AttachStateChanges) {
     RuntimeState state;
     EXPECT_FALSE(state.processState().attached);
+    EXPECT_TRUE(state.processState().attachedGroupPath.empty());
 
-    state.markAttached();
+    state.markAttached("web");
     EXPECT_TRUE(state.processState().attached);
+    EXPECT_EQ(state.processState().attachedGroupPath, "web");
 
     state.markDetached();
     EXPECT_FALSE(state.processState().attached);

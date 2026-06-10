@@ -40,6 +40,9 @@ private:
     static void diff_node(const ConfigNode& old_node,
                           const ConfigNode& new_node,
                           DiffResult& result);
+
+    static void collectAdded(const ConfigNode& node, DiffResult& result);
+    static void collectRemoved(const ConfigNode& node, DiffResult& result);
 };
 
 } // namespace resource_manager

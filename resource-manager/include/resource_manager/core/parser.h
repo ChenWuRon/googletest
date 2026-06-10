@@ -28,7 +28,7 @@ public:
 
 private:
     std::size_t pos_;
-    const std::vector<Token>& tokens_;
+    std::vector<Token> tokens_;
     std::vector<ParseError> errors_;
 
     const Token& peek() const;

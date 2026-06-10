@@ -3,16 +3,16 @@
 namespace resource_manager {
 
 std::vector<ReconciliationResult> RuntimeReconciler::reconcile(
-    RuntimeRepository& repo,
+    RuntimeStateManager& stateManager,
     const ProcessChangeSet& changes) const
 {
     std::vector<ReconciliationResult> results;
 
     for (const auto& change : changes.changes) {
-        auto stateOpt = repo.findByName(change.processName);
+        auto stateOpt = stateManager.findByName(change.processName);
         if (!stateOpt) {
             if (change.type == ProcessChangeType::ProcessCreated) {
-                repo.registerProcess(change.processName, change.pid);
+                stateManager.registerProcess(change.processName, change.pid);
                 results.push_back({ReconciliationAction::UpdatePid,
                                   change.processName, change.pid, 0});
             }
@@ -23,11 +23,12 @@ std::vector<ReconciliationResult> RuntimeReconciler::reconcile(
         results.push_back(result);
 
         if (result.action == ReconciliationAction::MarkLost) {
-            repo.removeProcess(change.pid);
+            stateManager.markProcessLost(change.processName, change.pid);
+            stateManager.removeProcess(change.pid);
         } else if (result.action == ReconciliationAction::UpdatePid) {
-            repo.updateProcessPid(change.processName, change.pid);
-            repo.setProcessDiscoveryStatus(change.processName, DiscoveryStatus::Discovered);
-            repo.setProcessRecoveryStatus(change.processName, RecoveryState::Recovered);
+            stateManager.updateProcessPid(change.processName, change.pid);
+            stateManager.setProcessDiscoveryStatus(change.processName, DiscoveryStatus::Discovered);
+            stateManager.setProcessRecoveryStatus(change.processName, RecoveryState::Recovered);
         }
     }
 

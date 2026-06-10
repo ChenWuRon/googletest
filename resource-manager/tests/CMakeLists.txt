@@ -20,6 +20,7 @@ set(LIB_SOURCES
     ${CMAKE_SOURCE_DIR}/src/state/runtime_event.cpp
     ${CMAKE_SOURCE_DIR}/src/state/runtime_state_machine.cpp
     ${CMAKE_SOURCE_DIR}/src/state/runtime_repository.cpp
+    ${CMAKE_SOURCE_DIR}/src/state/runtime_state_manager.cpp
     ${CMAKE_SOURCE_DIR}/src/driver/icgroup_driver.cpp
     ${CMAKE_SOURCE_DIR}/src/driver/cgroup_v2_driver.cpp
     ${CMAKE_SOURCE_DIR}/src/driver/mock_cgroup_driver.cpp
@@ -31,7 +32,6 @@ set(LIB_SOURCES
     ${CMAKE_SOURCE_DIR}/src/discovery/discovery_service.cpp
     ${CMAKE_SOURCE_DIR}/src/attach/attach_engine.cpp
     ${CMAKE_SOURCE_DIR}/src/attach/attach_policy.cpp
-    ${CMAKE_SOURCE_DIR}/src/attach/attach_tracker.cpp
     ${CMAKE_SOURCE_DIR}/src/monitor/monitor.cpp
     ${CMAKE_SOURCE_DIR}/src/monitor/process_watcher.cpp
     ${CMAKE_SOURCE_DIR}/src/monitor/runtime_reconciler.cpp
@@ -68,7 +68,6 @@ set(TEST_SOURCES
     discovery/test_discovery_service.cpp
     attach/test_attach_engine.cpp
     attach/test_attach_policy.cpp
-    attach/test_attach_tracker.cpp
     error/test_error.cpp
     log/test_logger.cpp
     monitor/test_monitor.cpp

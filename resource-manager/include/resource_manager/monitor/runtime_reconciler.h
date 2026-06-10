@@ -4,7 +4,7 @@
 #include <vector>
 #include <optional>
 
-#include "resource_manager/state/runtime_repository.h"
+#include "resource_manager/state/runtime_state_manager.h"
 #include "resource_manager/monitor/process_watcher.h"
 #include "resource_manager/error/error.h"
 
@@ -27,7 +27,7 @@ struct ReconciliationResult {
 class RuntimeReconciler {
 public:
     std::vector<ReconciliationResult> reconcile(
-        RuntimeRepository& repo,
+        RuntimeStateManager& stateManager,
         const ProcessChangeSet& changes) const;
 
     ReconciliationResult reconcileProcess(

@@ -6,7 +6,7 @@ using namespace resource_manager;
 TEST(RuntimeSnapshotTest, SnapshotConsistency) {
     RuntimeState state;
     state.updatePid(1234, "nginx");
-    state.markAttached();
+    state.markAttached("nginx");
 
     ThreadState t1{100, "worker-1"};
     ThreadState t2{101, "worker-2"};
@@ -44,7 +44,7 @@ TEST(RuntimeSnapshotTest, SnapshotComparison) {
 TEST(RuntimeSnapshotTest, SnapshotSerialization) {
     RuntimeState state;
     state.updatePid(1234, "nginx");
-    state.markAttached();
+    state.markAttached("nginx");
 
     auto snapshot = RuntimeSnapshot::capture(state);
     auto serialized = snapshot.serialize();

@@ -5,14 +5,14 @@ using namespace resource_manager;
 
 TEST(ProcessWatcherTest, DetectCreated) {
     ProcessWatcher watcher;
-    RuntimeRepository repo;
-    repo.registerProcess("test_proc", 100);
+    RuntimeStateManager stateManager;
+    stateManager.registerProcess("test_proc", 100);
 
     std::vector<ProcessInfo> discovered;
     discovered.push_back({101, "test_proc", "", "", {}});
     discovered.push_back({102, "new_proc", "", "", {}});
 
-    auto changes = watcher.detectDiscoveryChanges(discovered, repo);
+    auto changes = watcher.detectDiscoveryChanges(discovered, stateManager);
     EXPECT_FALSE(changes.empty());
 
     bool foundCreated = false;
@@ -27,14 +27,14 @@ TEST(ProcessWatcherTest, DetectCreated) {
 
 TEST(ProcessWatcherTest, DetectLost) {
     ProcessWatcher watcher;
-    RuntimeRepository repo;
-    repo.registerProcess("active_proc", 100);
-    repo.registerProcess("lost_proc", 101);
+    RuntimeStateManager stateManager;
+    stateManager.registerProcess("active_proc", 100);
+    stateManager.registerProcess("lost_proc", 101);
 
     std::vector<ProcessInfo> discovered;
     discovered.push_back({100, "active_proc", "", "", {}});
 
-    auto changes = watcher.detectDiscoveryChanges(discovered, repo);
+    auto changes = watcher.detectDiscoveryChanges(discovered, stateManager);
     EXPECT_FALSE(changes.empty());
 
     bool foundLost = false;
@@ -49,13 +49,13 @@ TEST(ProcessWatcherTest, DetectLost) {
 
 TEST(ProcessWatcherTest, DetectPIDChanged) {
     ProcessWatcher watcher;
-    RuntimeRepository repo;
-    repo.registerProcess("test_proc", 100);
+    RuntimeStateManager stateManager;
+    stateManager.registerProcess("test_proc", 100);
 
     std::vector<ProcessInfo> discovered;
     discovered.push_back({200, "test_proc", "", "", {}});
 
-    auto changes = watcher.detectDiscoveryChanges(discovered, repo);
+    auto changes = watcher.detectDiscoveryChanges(discovered, stateManager);
     EXPECT_FALSE(changes.empty());
 
     bool foundPidChange = false;
@@ -73,13 +73,13 @@ TEST(ProcessWatcherTest, DetectPIDChanged) {
 
 TEST(ProcessWatcherTest, NoChanges) {
     ProcessWatcher watcher;
-    RuntimeRepository repo;
-    repo.registerProcess("test_proc", 100);
+    RuntimeStateManager stateManager;
+    stateManager.registerProcess("test_proc", 100);
 
     std::vector<ProcessInfo> discovered;
     discovered.push_back({100, "test_proc", "", "", {}});
 
-    auto changes = watcher.detectDiscoveryChanges(discovered, repo);
+    auto changes = watcher.detectDiscoveryChanges(discovered, stateManager);
     EXPECT_TRUE(changes.empty());
 }
 

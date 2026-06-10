@@ -15,6 +15,7 @@ set(SOURCES
     state/runtime_event.cpp
     state/runtime_state_machine.cpp
     state/runtime_repository.cpp
+    state/runtime_state_manager.cpp
     driver/icgroup_driver.cpp
     driver/cgroup_v2_driver.cpp
     driver/mock_cgroup_driver.cpp
@@ -28,7 +29,6 @@ set(SOURCES
     discovery/discovery_service.cpp
     attach/attach_engine.cpp
     attach/attach_policy.cpp
-    attach/attach_tracker.cpp
     core/resource_transaction.cpp
     monitor/monitor.cpp
     monitor/process_watcher.cpp

@@ -4,10 +4,10 @@ namespace resource_manager {
 
 DiscoveryService::DiscoveryService(
     std::unique_ptr<IProcessDiscovery> discovery,
-    RuntimeRepository& repository
+    RuntimeStateManager& stateManager
 )
     : discovery_(std::move(discovery))
-    , repository_(repository)
+    , stateManager_(stateManager)
 {
 }
 
@@ -25,7 +25,7 @@ std::optional<ProcessInfo> DiscoveryService::discoverSingle(
         return std::nullopt;
     }
 
-    repository_.registerProcess(result->comm, result->pid);
+    stateManager_.registerProcess(result->comm, result->pid);
     publishEvent(EventType::ProcessDiscovered, result->pid, source);
 
     return result;
@@ -44,7 +44,7 @@ std::vector<ProcessInfo> DiscoveryService::discoverAll(
     std::vector<ProcessInfo> matched;
     for (const auto& proc : *result) {
         if (DiscoveryRules::match(rule.pattern, matchType, proc.comm)) {
-            repository_.registerProcess(proc.comm, proc.pid);
+            stateManager_.registerProcess(proc.comm, proc.pid);
             publishEvent(EventType::ProcessDiscovered, proc.pid, source);
             matched.push_back(proc);
         }
@@ -53,16 +53,20 @@ std::vector<ProcessInfo> DiscoveryService::discoverAll(
     return matched;
 }
 
+bool DiscoveryService::exists(int pid) {
+    return discovery_->exists(pid);
+}
+
+std::optional<ProcessInfo> DiscoveryService::findProcessByName(const std::string& name) {
+    return discovery_->findProcess(MatchRule{name, "exact"});
+}
+
 const std::vector<RuntimeEvent>& DiscoveryService::events() const {
     return events_;
 }
 
 void DiscoveryService::publishEvent(EventType type, int pid, const std::string& source) {
     events_.emplace_back(type, pid, source);
-}
-
-IProcessDiscovery& DiscoveryService::discovery() {
-    return *discovery_;
 }
 
 } // namespace resource_manager

@@ -71,26 +71,26 @@ protected:
         mockPtr_->addProcess(100, "proc_a");
         mockPtr_->addProcess(101, "proc_b");
 
-        repo_.registerProcess("proc_a", 100);
-        repo_.registerProcess("proc_b", 101);
+        stateManager_.registerProcess("proc_a", 100);
+        stateManager_.registerProcess("proc_b", 101);
 
-        discoveryService_ = std::make_unique<DiscoveryService>(std::move(mock), repo_);
+        discoveryService_ = std::make_unique<DiscoveryService>(std::move(mock), stateManager_);
     }
 
-    RuntimeRepository repo_;
+    RuntimeStateManager stateManager_;
     MockMonitorDiscovery* mockPtr_;
     std::unique_ptr<DiscoveryService> discoveryService_;
 };
 
 TEST_F(MonitorTest, PollNoChanges) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(100));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(100));
 
     auto events = monitor.poll();
     EXPECT_TRUE(events.empty());
 }
 
 TEST_F(MonitorTest, PollProcessLost) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(100));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(100));
 
     mockPtr_->removeProcess(100);
 
@@ -108,7 +108,7 @@ TEST_F(MonitorTest, PollProcessLost) {
 }
 
 TEST_F(MonitorTest, PollPIDChanged) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(100));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(100));
 
     mockPtr_->removeProcess(100);
     mockPtr_->addProcess(200, "proc_a");
@@ -127,7 +127,7 @@ TEST_F(MonitorTest, PollPIDChanged) {
 }
 
 TEST_F(MonitorTest, StartStop) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(50));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(50));
 
     EXPECT_FALSE(monitor.isRunning());
     monitor.start();
@@ -139,7 +139,7 @@ TEST_F(MonitorTest, StartStop) {
 }
 
 TEST_F(MonitorTest, EventsAccumulate) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(100));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(100));
 
     mockPtr_->removeProcess(100);
     monitor.poll();
@@ -149,7 +149,7 @@ TEST_F(MonitorTest, EventsAccumulate) {
 }
 
 TEST_F(MonitorTest, PollWithAllProcessesAlive) {
-    Monitor monitor(repo_, *discoveryService_, std::chrono::milliseconds(100));
+    Monitor monitor(stateManager_, *discoveryService_, std::chrono::milliseconds(100));
 
     mockPtr_->addProcess(100, "proc_a");
     mockPtr_->addProcess(101, "proc_b");

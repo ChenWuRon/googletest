@@ -32,6 +32,7 @@ struct ProcessState {
     int pid;
     std::string processName;
     bool attached;
+    std::string attachedGroupPath;
     std::chrono::system_clock::time_point attachTimestamp;
     std::chrono::system_clock::time_point lastSeen;
     DiscoveryStatus discoveryStatus;
@@ -48,7 +49,7 @@ public:
     std::optional<ThreadState> findThread(int tid) const;
 
     void updatePid(int pid, const std::string& processName);
-    void markAttached();
+    void markAttached(const std::string& groupPath = "");
     void markDetached();
 
     ProcessState& processState();

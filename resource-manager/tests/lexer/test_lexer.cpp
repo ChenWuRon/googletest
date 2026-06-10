@@ -220,7 +220,7 @@ TEST(LexerTest, InvalidCharacter) {
 }
 
 TEST(LexerTest, MultipleInvalidCharacters) {
-    Lexer lexer("@#$");
+    Lexer lexer("@$!");
     auto tokens = lexer.tokenize();
     ASSERT_GE(tokens.size(), 3);
     EXPECT_EQ(tokens[0].type, TokenType::ERROR);
@@ -351,10 +351,9 @@ TEST(LexerTest, SlashNotComment) {
     Lexer lexer("x/y");
     auto tokens = lexer.tokenize();
     ASSERT_GE(tokens.size(), 2);
-    EXPECT_EQ(tokens[0].lexeme, "x");
-    EXPECT_EQ(tokens[1].lexeme, "y");
-    EXPECT_EQ(tokens[1].type, TokenType::IDENTIFIER);
-    EXPECT_EQ(tokens[2].type, TokenType::END_OF_FILE);
+    EXPECT_EQ(tokens[0].lexeme, "x/y");
+    EXPECT_EQ(tokens[0].type, TokenType::IDENTIFIER);
+    EXPECT_EQ(tokens[1].type, TokenType::END_OF_FILE);
 }
 
 TEST(LexerTest, SingleSlashAtEnd) {

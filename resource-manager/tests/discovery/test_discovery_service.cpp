@@ -3,7 +3,7 @@
 
 #include "resource_manager/discovery/discovery_service.h"
 #include "resource_manager/discovery/discovery_rules.h"
-#include "resource_manager/state/runtime_repository.h"
+#include "resource_manager/state/runtime_state_manager.h"
 
 using namespace resource_manager;
 
@@ -51,8 +51,8 @@ TEST(DiscoveryServiceTest, DiscoverSingle) {
     auto mock = std::make_unique<MockDiscovery>();
     mock->procs.push_back({1234, "nginx", "", "", {}});
 
-    RuntimeRepository repo;
-    DiscoveryService service(std::move(mock), repo);
+    RuntimeStateManager stateManager;
+    DiscoveryService service(std::move(mock), stateManager);
 
     MatchRule rule{"nginx", "exact"};
     auto result = service.discoverSingle(rule, MatchType::Exact, "test");
@@ -61,7 +61,7 @@ TEST(DiscoveryServiceTest, DiscoverSingle) {
     EXPECT_EQ(result->pid, 1234);
     EXPECT_EQ(result->comm, "nginx");
 
-    auto found = repo.findByPid(1234);
+    auto found = stateManager.findByPid(1234);
     ASSERT_TRUE(found.has_value());
     EXPECT_EQ(found->processState().processName, "nginx");
 
@@ -71,8 +71,8 @@ TEST(DiscoveryServiceTest, DiscoverSingle) {
 
 TEST(DiscoveryServiceTest, DiscoverSingleNoMatch) {
     auto mock = std::make_unique<MockDiscovery>();
-    RuntimeRepository repo;
-    DiscoveryService service(std::move(mock), repo);
+    RuntimeStateManager stateManager;
+    DiscoveryService service(std::move(mock), stateManager);
 
     MatchRule rule{"nonexistent", "exact"};
     auto result = service.discoverSingle(rule, MatchType::Exact, "test");
@@ -86,8 +86,8 @@ TEST(DiscoveryServiceTest, DiscoverAll) {
     mock->procs.push_back({1234, "nginx", "", "", {}});
     mock->procs.push_back({5678, "redis", "", "", {}});
 
-    RuntimeRepository repo;
-    DiscoveryService service(std::move(mock), repo);
+    RuntimeStateManager stateManager;
+    DiscoveryService service(std::move(mock), stateManager);
 
     MatchRule rule{"nginx", "exact"};
     auto results = service.discoverAll(rule, MatchType::Exact, "test");
@@ -98,8 +98,8 @@ TEST(DiscoveryServiceTest, DiscoverAll) {
 
 TEST(DiscoveryServiceTest, DiscoverAllEmpty) {
     auto mock = std::make_unique<MockDiscovery>();
-    RuntimeRepository repo;
-    DiscoveryService service(std::move(mock), repo);
+    RuntimeStateManager stateManager;
+    DiscoveryService service(std::move(mock), stateManager);
 
     MatchRule rule{"nginx", "exact"};
     auto results = service.discoverAll(rule, MatchType::Exact, "test");

@@ -6,15 +6,19 @@
 namespace resource_manager {
 
 RecoveryManager::RecoveryManager(
-    RuntimeRepository& repo,
-    DiscoveryService& discovery)
-    : repo_(repo)
+    RuntimeStateManager& stateManager,
+    DiscoveryService& discovery,
+    AttachEngine& attachEngine,
+    ConfigRepository& configRepo)
+    : stateManager_(stateManager)
     , discovery_(discovery)
+    , attachEngine_(attachEngine)
+    , configRepo_(configRepo)
 {
 }
 
 std::optional<Error> RecoveryManager::recoverProcess(const std::string& processName) {
-    auto stateOpt = repo_.findByName(processName);
+    auto stateOpt = stateManager_.findByName(processName);
     if (!stateOpt) {
         publishEvent(EventType::RecoveryFailed, 0, "RecoveryManager");
         return Error(ErrorCode::ProcessNotFound,
@@ -24,10 +28,9 @@ std::optional<Error> RecoveryManager::recoverProcess(const std::string& processN
 
     int oldPid = stateOpt->processState().pid;
 
-    auto info = discovery_.discovery().findProcess(
-        MatchRule{processName, "exact"});
+    auto info = discovery_.findProcessByName(processName);
     if (!info) {
-        repo_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
         publishEvent(EventType::RecoveryFailed, oldPid, "RecoveryManager");
         return Error(ErrorCode::ProcessNotFound,
                      "Process not found during recovery: " + processName,
@@ -35,17 +38,48 @@ std::optional<Error> RecoveryManager::recoverProcess(const std::string& processN
     }
 
     if (info->pid != oldPid) {
-        repo_.updateProcessPid(processName, info->pid);
+        stateManager_.updateProcessPid(processName, info->pid);
     }
-    repo_.setProcessDiscoveryStatus(processName, DiscoveryStatus::Discovered);
-    repo_.setProcessRecoveryStatus(processName, RecoveryState::Recovered);
+    stateManager_.setProcessDiscoveryStatus(processName, DiscoveryStatus::Discovered);
+
+    auto* groupNode = findGroupInConfig(processName);
+    if (!groupNode) {
+        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+        publishEvent(EventType::RecoveryFailed, info->pid, "RecoveryManager");
+        return Error(ErrorCode::ConfigNotFound,
+                     "Group not found in config: " + processName,
+                     "RecoveryManager");
+    }
+
+    auto freshState = stateManager_.findByName(processName);
+    if (!freshState) {
+        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+        publishEvent(EventType::RecoveryFailed, info->pid, "RecoveryManager");
+        return Error(ErrorCode::ProcessNotFound,
+                     "Process state not found for reattach: " + processName,
+                     "RecoveryManager");
+    }
+
+    auto err = attachEngine_.reattach(*groupNode, *freshState);
+    if (err) {
+        stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+        publishEvent(EventType::RecoveryFailed, info->pid, "RecoveryManager");
+        return err;
+    }
+
+    stateManager_.setProcessGroupPath(processName, groupNode->name());
+    stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Recovered);
 
     publishEvent(EventType::RecoverySucceeded, info->pid, "RecoveryManager");
     return std::nullopt;
 }
 
+const ConfigNode* RecoveryManager::findGroupInConfig(const std::string& name) const {
+    return configRepo_.getRoot().root().findChild(name);
+}
+
 std::optional<Error> RecoveryManager::recoverAll() {
-    auto allStates = repo_.getAll();
+    auto allStates = stateManager_.getAll();
 
     for (const auto& st : allStates) {
         if (st.processState().recoveryStatus == RecoveryState::Failed ||
@@ -53,7 +87,7 @@ std::optional<Error> RecoveryManager::recoverAll() {
         {
             auto err = recoverProcess(st.processState().processName);
             if (err) {
-                repo_.setProcessDiscoveryStatus(
+                stateManager_.setProcessDiscoveryStatus(
                     st.processState().processName, DiscoveryStatus::Missing);
             }
         }
@@ -76,7 +110,7 @@ std::optional<Error> RecoveryManager::recoverProcessWithRetry(
         }
     }
 
-    repo_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
+    stateManager_.setProcessRecoveryStatus(processName, RecoveryState::Failed);
 
     return Error(ErrorCode::RecoveryFailed,
                  "Recovery failed after " + std::to_string(maxRetries) + " retries: " + processName,

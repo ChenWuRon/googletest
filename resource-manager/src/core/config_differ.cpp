@@ -19,11 +19,7 @@ void ConfigDiffer::diff_node(const ConfigNode& old_node,
     for (const auto& [name, new_child] : new_children) {
         auto it = old_children.find(name);
         if (it == old_children.end()) {
-            DiffEntry entry;
-            entry.type = DiffType::ADDED;
-            entry.path = new_child->path();
-            entry.node_type = new_child->type();
-            result.added.push_back(std::move(entry));
+            collectAdded(*new_child, result);
         } else if (new_child->type() == ConfigNodeType::ITEM &&
                    it->second->type() == ConfigNodeType::ITEM) {
             if (new_child->value() != it->second->value()) {
@@ -42,13 +38,34 @@ void ConfigDiffer::diff_node(const ConfigNode& old_node,
 
     // Find removed
     for (const auto& [name, old_child] : old_children) {
-        if (new_children.find(name) == new_children.end()) {
-            DiffEntry entry;
-            entry.type = DiffType::REMOVED;
-            entry.path = old_child->path();
-            entry.node_type = old_child->type();
-            result.removed.push_back(std::move(entry));
+        auto it = new_children.find(name);
+        if (it == new_children.end()) {
+            collectRemoved(*old_child, result);
         }
+    }
+}
+
+void ConfigDiffer::collectAdded(const ConfigNode& node, DiffResult& result) {
+    DiffEntry entry;
+    entry.type = DiffType::ADDED;
+    entry.path = node.path();
+    entry.node_type = node.type();
+    result.added.push_back(std::move(entry));
+
+    for (const auto& [name, child] : node.children()) {
+        collectAdded(*child, result);
+    }
+}
+
+void ConfigDiffer::collectRemoved(const ConfigNode& node, DiffResult& result) {
+    DiffEntry entry;
+    entry.type = DiffType::REMOVED;
+    entry.path = node.path();
+    entry.node_type = node.type();
+    result.removed.push_back(std::move(entry));
+
+    for (const auto& [name, child] : node.children()) {
+        collectRemoved(*child, result);
     }
 }
 

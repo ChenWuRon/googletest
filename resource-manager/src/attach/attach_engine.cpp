@@ -88,7 +88,7 @@ std::optional<Error> AttachEngine::executeAttach(
         }
     }
 
-    state.markAttached();
+    state.markAttached(cgroupPath);
     return std::nullopt;
 }
 

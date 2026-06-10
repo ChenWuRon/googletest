@@ -74,6 +74,7 @@ set(TEST_SOURCES
     monitor/test_process_watcher.cpp
     monitor/test_runtime_reconciler.cpp
     recovery/test_recovery_manager.cpp
+    integration/test_integration.cpp
 )
 
 add_executable(resource-manager-tests ${LIB_SOURCES} ${TEST_SOURCES})

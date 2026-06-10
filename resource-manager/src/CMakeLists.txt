@@ -11,6 +11,10 @@ set(SOURCES
     lexer/lexer.cpp
     mode/mode.cpp
     state/runtime_state.cpp
+    state/runtime_snapshot.cpp
+    state/runtime_event.cpp
+    state/runtime_state_machine.cpp
+    state/runtime_repository.cpp
     driver/cgroup_v2_driver.cpp
     driver/cgroup_v1_driver.cpp
     driver/mock_cgroup_driver.cpp

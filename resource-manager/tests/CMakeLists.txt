@@ -12,6 +12,10 @@ set(TEST_SOURCES
     lexer/test_lexer.cpp
     mode/test_mode.cpp
     state/test_runtime_state.cpp
+    state/test_runtime_snapshot.cpp
+    state/test_runtime_event.cpp
+    state/test_runtime_state_machine.cpp
+    state/test_runtime_repository.cpp
     driver/test_cgroup_driver.cpp
     discovery/test_process_discovery.cpp
     attach/test_attach_engine.cpp

@@ -55,20 +55,32 @@ ROOT
 
 ## 路径访问模型
 
-每个节点通过路径唯一标识：
+每个节点通过路径唯一标识。
+
+路径由节点名称按层级拼接而成，不含类型字面量段。
 
 ```
-/groups/<group-name>
-/groups/<group-name>/controllers/<controller-type>
-/groups/<group-name>/controllers/<controller-type>/items/<item-name>
+/<group-name>
+/<group-name>/<controller-name>
+/<group-name>/<controller-name>/<item-name>
 ```
 
 示例：
 
 ```
-/groups/web-server
-/groups/web-server/controllers/cpu
-/groups/web-server/controllers/cpu/items/cpu.max
+/web-server
+/web-server/cpu
+/web-server/cpu/cpu.max
+```
+
+根节点路径为 `/`。
+
+`ConfigNodeType` 已经提供类型信息，路径中不再需要 `groups`、`controllers`、`items` 等字面量段。
+
+删除的旧格式（已废弃）：
+
+```
+/groups/<group-name>/controllers/<controller>/items/<item>
 ```
 
 ## 遍历模型
@@ -97,30 +109,40 @@ Diff 结果用于增量 Apply。
 
 ---
 
-# Data Structures
+# Implementation: Tree Model
 
-```text
-ConfigDomain {
-    groups: Map<String, Group>
-}
+ConfigDomain Tree 使用多叉树实现，节点通过 `ConfigNode` 类表示。
 
-Group {
-    name: String
-    mode: Mode
-    match: MatchRule
-    controllers: Map<String, Controller>
-}
+## ConfigNode
 
-Controller {
-    type: String
-    items: Map<String, Item>
-}
+每个 `ConfigNode` 包含：
 
-Item {
-    name: String
-    value: String
-    value_type: ValueType
-}
+| 字段 | 说明 |
+|------|------|
+| type | ConfigNodeType (ROOT/GROUP/CONTROLLER/ITEM) |
+| name | 节点名称 |
+| parent | 父节点指针（原始指针，不拥有） |
+| children | 子节点映射 (map<string, unique_ptr<ConfigNode>>) |
+| value | 仅 ITEM 节点：资源限制值 |
+| value_type | 仅 ITEM 节点：值类型 (ValueType) |
+| mode | 仅 GROUP 节点：Mode 三元组 |
+| match_rule | 仅 GROUP 节点：进程匹配规则 |
+
+## 所有权
+
+- 父节点通过 `unique_ptr` 拥有子节点
+- 子节点通过原始指针引用父节点
+- ConfigDomain 拥有根节点
+
+## ConfigPath
+
+路径通过 node name 拼接，不含类型字面量段。
+
+```
+/                     ROOT
+/ssm_app              GROUP("ssm_app")
+/ssm_app/cpu          CONTROLLER("cpu") under GROUP("ssm_app")
+/ssm_app/cpu/cpu.max  ITEM("cpu.max") under CONTROLLER("cpu")
 ```
 
 ---

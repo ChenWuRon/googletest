@@ -18,9 +18,9 @@ public:
     explicit AttachEngine(std::unique_ptr<ICgroupDriver> driver);
     ~AttachEngine() = default;
 
-    std::optional<Error> attach(const Group& group, const RuntimeState& state);
+    std::optional<Error> attach(const ConfigNode& group, const RuntimeState& state);
     std::optional<Error> detach(const RuntimeState& state);
-    std::optional<Error> reattach(const Group& group, RuntimeState& state);
+    std::optional<Error> reattach(const ConfigNode& group, RuntimeState& state);
 
 private:
     std::unique_ptr<ICgroupDriver> driver_;

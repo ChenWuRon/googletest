@@ -1,0 +1,403 @@
+# ADR-001 Project Boundaries
+
+Status: Accepted
+
+Date: 2026-06-10
+
+Authors: Project Team
+
+---
+
+# Context
+
+Linux cgroup 提供了强大的资源隔离能力，但其配置方式分散且缺乏统一管理机制。
+
+当前系统中存在以下问题：
+
+* CPU、Memory、Cpuset 等资源配置分散
+* 进程重启后资源绑定丢失
+* 线程级资源控制困难
+* 配置与运行状态耦合
+* 缺少统一资源管理入口
+
+因此需要构建一个统一的 Resource Manager。
+
+在开始设计之前，必须明确项目边界。
+
+如果项目边界不明确，后续实现过程中容易出现：
+
+* 功能无限扩张
+* 模块职责重叠
+* 架构失控
+* 与 systemd、容器平台等系统产生职责冲突
+
+因此需要首先定义：
+
+* 项目负责什么
+* 项目不负责什么
+
+---
+
+# Decision
+
+Resource Manager 是一个 Linux 资源编排框架（Resource Orchestration Framework）。
+
+核心职责：
+
+1. 管理资源配置
+2. 管理资源绑定
+3. 管理资源恢复
+4. 提供资源观测能力
+
+本项目不负责进程生命周期管理。
+
+本项目不负责服务启动。
+
+本项目不负责容器管理。
+
+本项目不负责调度算法。
+
+---
+
+# In Scope
+
+以下能力属于本项目职责范围。
+
+---
+
+## Resource Configuration
+
+负责统一描述资源规则。
+
+例如：
+
+* cpu.max
+* cpu.weight
+* memory.max
+* cpuset.cpus
+* cpuset.mems
+* io.max
+* pids.max
+
+支持配置文件统一管理。
+
+---
+
+## Resource Orchestration
+
+负责：
+
+* 创建 cgroup
+* 设置控制器参数
+* 创建资源层级
+* 管理资源规则
+
+例如：
+
+```text
+Create Group
+Apply CPU Limit
+Apply Memory Limit
+Apply Cpuset
+```
+
+---
+
+## Process Discovery
+
+负责：
+
+```text
+发现目标进程
+发现目标线程
+维护PID映射关系
+```
+
+支持：
+
+```text
+精确匹配
+前缀匹配
+通配符匹配
+```
+
+---
+
+## Resource Binding
+
+负责：
+
+```text
+PID Attach
+TID Attach
+资源归属管理
+```
+
+例如：
+
+```text
+Process
+    ↓
+cgroup.procs
+```
+
+---
+
+## Runtime State Management
+
+负责维护运行时状态。
+
+例如：
+
+```text
+PID
+TID
+Attach状态
+恢复状态
+最近发现时间
+```
+
+运行时状态与配置状态必须分离。
+
+---
+
+## Recovery
+
+负责：
+
+```text
+进程重启检测
+PID变化检测
+自动重新Attach
+```
+
+目标：
+
+即使服务重启，也能自动恢复资源配置。
+
+---
+
+## Monitoring
+
+负责：
+
+```text
+资源绑定状态观测
+进程状态观测
+恢复状态观测
+```
+
+---
+
+## Configuration Reload
+
+负责：
+
+```text
+重新加载配置
+增量更新配置
+重新应用资源规则
+```
+
+---
+
+# Out Of Scope
+
+以下能力明确不属于本项目。
+
+---
+
+## Process Lifecycle Management
+
+不负责：
+
+```text
+启动进程
+停止进程
+重启进程
+守护进程
+```
+
+例如：
+
+```bash
+systemctl start xxx
+systemctl stop xxx
+```
+
+属于 systemd 职责。
+
+---
+
+## Service Management
+
+不负责：
+
+```text
+服务编排
+服务依赖管理
+服务排序
+服务健康检查
+```
+
+属于 systemd 或上层平台职责。
+
+---
+
+## Container Runtime
+
+不负责：
+
+```text
+Docker
+containerd
+CRI-O
+LXC
+```
+
+本项目不创建容器。
+
+不管理容器生命周期。
+
+---
+
+## Kubernetes
+
+不负责：
+
+```text
+Pod
+Node
+Scheduler
+Deployment
+DaemonSet
+```
+
+本项目不是 Kubernetes 组件。
+
+---
+
+## Resource Scheduling
+
+不负责：
+
+```text
+CPU调度算法
+NUMA调度算法
+负载均衡算法
+实时调度算法
+```
+
+这些属于 Linux Kernel。
+
+---
+
+## Security Management
+
+不负责：
+
+```text
+权限系统
+认证
+授权
+用户管理
+```
+
+---
+
+## Metrics Platform
+
+不负责：
+
+```text
+Prometheus
+Grafana
+Metrics存储
+时序数据库
+```
+
+本项目只负责提供状态。
+
+不负责指标平台建设。
+
+---
+
+# System Boundary
+
+```
+                User
+                  │
+                  ▼
+          Configuration
+                  │
+                  ▼
+          Resource Manager
+                  │
+    ┌─────────────┼─────────────┐
+    ▼             ▼             ▼
+```
+
+Process      Cgroup Driver   Monitor
+Discovery
+│             │
+└──────┬──────┘
+▼
+Linux Kernel
+
+---
+
+# Consequences
+
+采用本决策后：
+
+优点：
+
+* 项目边界清晰
+* 模块职责明确
+* 易于扩展
+* 易于测试
+* 不与 systemd 冲突
+
+代价：
+
+* 需要依赖外部系统启动服务
+* 需要依赖外部系统管理容器
+* 需要依赖 Linux Kernel 完成最终资源控制
+
+---
+
+# Future Considerations
+
+未来允许扩展：
+
+* 新 Controller
+* 新 Namespace
+* 新 Discovery Backend
+* 新 Monitoring Backend
+
+未来禁止扩展：
+
+* Service Manager
+* Container Runtime
+* Scheduler
+
+这些能力必须保持在项目边界之外。
+
+---
+
+# Related ADR
+
+ADR-002 Config Grammar
+
+ADR-003 Config Tree
+
+ADR-004 Mode System
+
+ADR-005 Runtime State
+
+ADR-006 Cgroup Driver
+
+ADR-007 Process Discovery
+
+ADR-008 Recovery
+

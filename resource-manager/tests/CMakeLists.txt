@@ -3,6 +3,7 @@ find_package(GTest REQUIRED)
 set(TEST_SOURCES
     core/test_config_domain.cpp
     core/test_config_parser.cpp
+    lexer/test_lexer.cpp
     mode/test_mode.cpp
     state/test_runtime_state.cpp
     driver/test_cgroup_driver.cpp

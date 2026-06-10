@@ -2,6 +2,7 @@ set(SOURCES
     core/config_domain.cpp
     core/config_parser.cpp
     core/rule_builder.cpp
+    lexer/lexer.cpp
     mode/mode.cpp
     state/runtime_state.cpp
     driver/cgroup_v2_driver.cpp

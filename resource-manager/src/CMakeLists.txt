@@ -16,11 +16,8 @@ set(SOURCES
     state/runtime_state_machine.cpp
     state/runtime_repository.cpp
     driver/icgroup_driver.cpp
-    driver/icgroup_driver.cpp
     driver/cgroup_v2_driver.cpp
     driver/mock_cgroup_driver.cpp
-    driver/control_file_type.cpp
-    driver/resource_applier.cpp
     driver/control_file_type.cpp
     driver/resource_applier.cpp
     discovery/procfs_discovery.cpp
@@ -28,6 +25,9 @@ set(SOURCES
     discovery/discovery_cache.cpp
     discovery/discovery_service.cpp
     attach/attach_engine.cpp
+    attach/attach_policy.cpp
+    attach/attach_tracker.cpp
+    core/resource_transaction.cpp
     monitor/monitor.cpp
     log/logger.cpp
     main/main.cpp

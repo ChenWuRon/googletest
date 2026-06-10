@@ -10,23 +10,20 @@ using namespace resource_manager;
 TEST(ConfigLoaderTest, LoadFromString) {
     ConfigLoader loader;
     auto result = loader.loadFromString("hello config");
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result.value(), "hello config");
+    EXPECT_EQ(result, "hello config");
 }
 
 TEST(ConfigLoaderTest, LoadFromStringEmpty) {
     ConfigLoader loader;
     auto result = loader.loadFromString("");
-    ASSERT_TRUE(result.has_value());
-    EXPECT_TRUE(result.value().empty());
+    EXPECT_TRUE(result.empty());
 }
 
 TEST(ConfigLoaderTest, LoadFromStringMultiline) {
     ConfigLoader loader;
     std::string multi = "group app {\n    mode service;\n}\n";
     auto result = loader.loadFromString(multi);
-    ASSERT_TRUE(result.has_value());
-    EXPECT_EQ(result.value(), multi);
+    EXPECT_EQ(result, multi);
 }
 
 // ── loadFromFile ────────────────────────────────────────────────────────

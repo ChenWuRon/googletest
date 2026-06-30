@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/param_test.dir/param_test.cpp.o -o param_test   -L/home/mark_chen6/google/gtest/demo/../third_party/lib  -Wl,-rpath,/home/mark_chen6/google/gtest/demo/../third_party/lib -lgtest -lgtest_main -lpthread 

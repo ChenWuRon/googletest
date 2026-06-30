@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/fixture_excise.dir/fixture_excise.cpp.o -o fixture_excise   -L/home/mark_chen6/google/gtest/demo/../third_party/lib  -Wl,-rpath,/home/mark_chen6/google/gtest/demo/../third_party/lib -lgtest -lgtest_main -lpthread 

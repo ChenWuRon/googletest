@@ -1,0 +1,10 @@
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/demo.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/assertions_test.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/fixture_test.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/fixture_excise.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/param_test.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/param_exercise.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/mock_test.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/user_service_test.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/edit_cache.dir
+/home/mark_chen6/google/gtest/demo/build/CMakeFiles/rebuild_cache.dir

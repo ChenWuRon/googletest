@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/02_custom_main.dir/02_custom_main.cpp.o -o 02_custom_main  /usr/lib/aarch64-linux-gnu/libbenchmark.so.1.8.3 

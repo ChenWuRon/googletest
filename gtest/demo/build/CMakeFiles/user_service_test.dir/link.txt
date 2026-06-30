@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/user_service_test.dir/user_service_test.cpp.o -o user_service_test   -L/home/mark_chen6/google/gtest/demo/../third_party/lib  -Wl,-rpath,/home/mark_chen6/google/gtest/demo/../third_party/lib -lgmock -lgtest -lgtest_main -lpthread 

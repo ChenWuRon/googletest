@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/assertions_test.dir/assertions_test.cpp.o -o assertions_test   -L/home/mark_chen6/google/gtest/demo/../third_party/lib  -Wl,-rpath,/home/mark_chen6/google/gtest/demo/../third_party/lib -lgtest -lgtest_main -lpthread 

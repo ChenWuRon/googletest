@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/mock_test.dir/mock_test.cpp.o -o mock_test   -L/home/mark_chen6/google/gtest/demo/../third_party/lib  -Wl,-rpath,/home/mark_chen6/google/gtest/demo/../third_party/lib -lgmock -lgtest -lgtest_main -lpthread 

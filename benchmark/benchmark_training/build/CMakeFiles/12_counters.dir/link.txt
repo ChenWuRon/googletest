@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/12_counters.dir/12_counters.cpp.o -o 12_counters  /usr/lib/aarch64-linux-gnu/libbenchmark.so.1.8.3 
